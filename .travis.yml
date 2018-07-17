@@ -1,0 +1,10 @@
+language: julia
+os:
+    - linux
+    - osx
+julia:
+    - 0.6
+notifications:
+    email: false
+after_success:
+    - julia -e 'cd(Pkg.dir("CompactTranslatesDict")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
