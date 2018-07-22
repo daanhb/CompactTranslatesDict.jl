@@ -1,56 +1,48 @@
-using Base.Test
-using BasisFunctions
-using StaticArrays
-using Domains
-function test_generic_periodicbsplinebasis(T)
+using BasisFunctions, Domains, StaticArrays
 
-    for B in (BSplineTranslatesBasis, SymBSplineTranslatesBasis,)
-        tol = sqrt(eps(real(T)))
-        n = 5
-        b = B(n,3, T)
-        @test leftendpoint(support(b)) == 0
-        @test rightendpoint(support(b))==1
-
-        @test length(b)==5
-        @test CompactTranslatesDict.degree(b)==3
-        @test is_basis(b)
-        @test BasisFunctions.is_biorthogonal(b)
-        @test !BasisFunctions.is_orthogonal(b)
-        @test !BasisFunctions.is_orthonormal(b)
-        @test !has_unitary_transform(b)
-
-        @test CompactTranslatesDict.left_of_compact_function(b) <= 0 <= CompactTranslatesDict.right_of_compact_function(b)
-        @test 0 < CompactTranslatesDict.right_of_compact_function(b) - CompactTranslatesDict.left_of_compact_function(b) < BasisFunctions.period(b)
-
-        @test instantiate(B, 4, Float16)==B(4,3,Float16)
-        @test promote_domaintype(b, Float16)==B(n,CompactTranslatesDict.degree(b),Float16)
-        @test promote_domaintype(b, complex(Float64))==B(n,CompactTranslatesDict.degree(b),Complex128)
-        @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
-        @test BasisFunctions.grid(b)==PeriodicEquispacedGrid(n,0,1)
-        @test BasisFunctions.period(b)==T(1)
-        @test BasisFunctions.stepsize(b)==T(1//5)
-
-        n = 3
-        b=B(n,1,T)
-        @test abs(sum(CompactTranslatesDict.grammatrix(b) - [2//3 1//6 1//6; 1//6 2//3 1//6;1//6 1//6 2//3]//n)) < tol
-        @test abs(sum(CompactTranslatesDict.dualgrammatrix(b) - [5/3 -1/3 -1/3; -1/3 5/3 -1/3; -1/3 -1/3 5/3]*n)) < tol
-
-        n = 8
-        b=B(n,0,T)
-        t = linspace(T(0),T(1))
-        fp = map(x->BasisFunctions.unsafe_eval_element(b,1,x),t)
-        fd = 1/n*map(x->CompactTranslatesDict.eval_dualelement(b,1,x),t)
-        @test fp≈fd
-    end
+if VERSION < v"0.7-"
+    using Base.Test
+else
+    using Test, LinearAlgebra
 end
 
-using CompactTranslatesDict: interval_index, coefficient_index_range_of_overlapping_elements
+function test_generic_periodicbsplinebasis(B,T)
+    tol = sqrt(eps(real(T)))
+    n = 5
+    b = B(n,3, T)
+    @test leftendpoint(support(b)) == 0
+    @test rightendpoint(support(b))==1
+
+    @test length(b)==5
+    @test CompactTranslatesDict.degree(b)==3
+    @test is_basis(b)
+    @test BasisFunctions.is_biorthogonal(b)
+    @test !BasisFunctions.is_orthogonal(b)
+    @test !BasisFunctions.is_orthonormal(b)
+    @test !has_unitary_transform(b)
+
+    @test infimum(CompactTranslatesDict.kernel_span(b)) <= 0 <= supremum(CompactTranslatesDict.kernel_span(b))
+    @test 0 < supremum(CompactTranslatesDict.kernel_span(b)) - infimum(CompactTranslatesDict.kernel_span(b)) < BasisFunctions.period(b)
+
+    @test instantiate(B, 4, Float16)==B(4,3,Float16)
+    @test promote_domaintype(b, Float16)==B(n,CompactTranslatesDict.degree(b),Float16)
+    @test promote_domaintype(b, complex(Float64))==B(n,CompactTranslatesDict.degree(b),Complex{Float64})
+    @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
+    @test BasisFunctions.grid(b)==PeriodicEquispacedGrid(n,0,1)
+    @test BasisFunctions.period(b)==T(1)
+    @test BasisFunctions.stepsize(b)==T(1//5)
+
+    n = 3
+    b=B(n,1,T)
+    @test abs(sum(matrix(Gram(b)) - [2//3 1//6 1//6; 1//6 2//3 1//6;1//6 1//6 2//3]//n)) < tol
+    @test abs(sum(matrix(DualGram(b)) - [5/3 -1/3 -1/3; -1/3 5/3 -1/3; -1/3 -1/3 5/3]*n)) < tol
+
+end
+
 function test_translatedbsplines(T)
     B = BSplineTranslatesBasis(10,1)
     x = [1e-4,.23,.94]
-    @test [interval_index(B,t)[1] for t in x] == [1,3,10]
-    indices = coefficient_index_range_of_overlapping_elements.(B,x)
-    @test reduce(&,true,[B[i].(x[j]) for j in 1:length(x) for i in indices[j]].>0)
+    @test [CompactTranslatesDict.interval_index(B,t)[1] for t in x] == [1,3,10]
 
     tol = sqrt(eps(real(T)))
     n = 5
@@ -61,7 +53,7 @@ function test_translatedbsplines(T)
 
     b = BSplineTranslatesBasis(n,3, T)
 
-    @test BasisFunctions.name(b) == "Set of translates of a function (B spline of degree 3)"
+    @test BasisFunctions.name(b) == "Dictionary of equispaced translates of a kernel function (B spline of degree 3)"
 
     @test infimum(support(b,1))≈ 0
     @test infimum(support(b,2))≈1//5
@@ -77,7 +69,7 @@ function test_translatedbsplines(T)
     t = .001
     @test in_support(b,1,.5)
     @test !in_support(b,1,.8+t)
-    @test !in_support(b,1,1.-t)
+    @test !in_support(b,1,1. -t)
     @test in_support(b,3,.2-t)
     @test in_support(b,3,.4+t)
     @test !in_support(b,3,.2+t)
@@ -100,20 +92,22 @@ function test_translatedbsplines(T)
 
     # Test extension_operator and invertability of restriction_operator w.r.t. extension_operator.
     n = 8
-    for degree in 0:3
-        b = BSplineTranslatesBasis(n, degree, T)
-        basis_ext = extend(b)
-        r = restriction_operator(basis_ext, b)
-        e = extension_operator(b, basis_ext)
-        @test abs(sum(eye(n)-matrix(r*e))) < tol
+    if VERSION < v"0.7-"
+        for degree in 0:3
+            b = BSplineTranslatesBasis(n, degree, T)
+            basis_ext = extend(b)
+            r = restriction_operator(basis_ext, b)
+            e = extension_operator(b, basis_ext)
+            @test (VERSION < v"0.7-") ? abs(sum(eye(n)-matrix(r*e))) < tol : abs(sum(Matrix(1.0I, n, n) -matrix(r*e))) < tol
 
-        grid_ext = grid(basis_ext)
-        L = evaluation_operator(b, grid_ext)
-        e = random_expansion(b)
-        z = L*e
-        L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
-        z2 = L2*e
-        @test maximum(abs.(z-z2)) < tol
+            grid_ext = grid(basis_ext)
+            L = evaluation_operator(b, grid_ext)
+            e = random_expansion(b)
+            z = L*e
+            L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
+            z2 = L2*e
+            @test maximum(abs.(z-z2)) < tol
+        end
     end
 
 
@@ -167,209 +161,6 @@ function test_translatedbsplines(T)
     @test_throws AssertionError extension_operator(BSplineTranslatesBasis(4,0,T), BSplineTranslatesBasis(6,0,T))
 end
 
-
-function test_translatedsymmetricbsplines(T)
-    tol = sqrt(eps(real(T)))
-    n = 5
-
-    b = SymBSplineTranslatesBasis(n,1,T)
-    bb = BSplineTranslatesBasis(n,1,T)
-    @test norm((Gram(b)-Gram(bb))*rand(n)) < tol
-
-    b = SymBSplineTranslatesBasis(n,3, T)
-
-    @test BasisFunctions.name(b) == "Set of translates of a function (symmetric B spline of degree 3)"
-
-
-    @test infimum(support(b,1))≈ -4//10
-    @test infimum(support(b,2))≈ -2//10
-    @test infimum(support(b,3))≈ 0//10
-    @test infimum(support(b,4))≈ 2//10
-    @test infimum(support(b,5))≈ 4//10
-    @test supremum(support(b,1))≈4//10
-    @test supremum(support(b,2))≈6//10
-    @test supremum(support(b,3))≈8//10
-    @test supremum(support(b,4))≈10//10
-    @test supremum(support(b,5))≈12//10
-
-    t = .001
-    @test in_support(b,1,.0)
-    @test !in_support(b,1,.4+t)
-    @test !in_support(b,1,.6-t)
-    @test in_support(b,3,.8-t)
-    @test in_support(b,3,.0+t)
-    @test !in_support(b,3,.8+t)
-    @test !in_support(b,3,.0-t)
-
-    grid(SymBSplineTranslatesBasis(n,2, T)) == EquispacedGrid(n,0,1)
-    @test BasisFunctions.compatible_grid(b, grid(b))
-    @test BasisFunctions.compatible_grid(b, MidpointEquispacedGrid(n,0,1))
-    @test !BasisFunctions.compatible_grid(b, PeriodicEquispacedGrid(n+1,0,1))
-    @test !BasisFunctions.compatible_grid(b, PeriodicEquispacedGrid(n,0.1,1))
-    @test !BasisFunctions.compatible_grid(b, PeriodicEquispacedGrid(n,0,1.1))
-
-    @test BasisFunctions.compatible_grid(b, grid(b))
-    @test BasisFunctions.compatible_grid(b, PeriodicEquispacedGrid(n,0,1))
-    @test !BasisFunctions.compatible_grid(b, MidpointEquispacedGrid(n+1,0,1))
-    @test !BasisFunctions.compatible_grid(b, MidpointEquispacedGrid(n,0.1,1))
-    @test !BasisFunctions.compatible_grid(b, MidpointEquispacedGrid(n,0,1.1))
-
-    # Test extension_operator and invertability of restriction_operator w.r.t. extension_operator.
-    n = 8
-    for degree in 1:2:3
-        b = SymBSplineTranslatesBasis(n, degree, T)
-        basis_ext = extend(b)
-        r = restriction_operator(basis_ext, b)
-        e = extension_operator(b, basis_ext)
-        @test abs(sum(eye(n)-matrix(r*e))) < tol
-
-        grid_ext = grid(basis_ext)
-        L = evaluation_operator(b, grid_ext)
-        e = random_expansion(b)
-        z = L*e
-        L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
-        z2 = L2*e
-        @test maximum(abs.(z-z2)) < tol
-    end
-
-
-    for K in 1:2:3
-        for s2 in 5:6
-            s1 = s2<<1
-            b1 = SymBSplineTranslatesBasis(s1,K)
-            b2 = SymBSplineTranslatesBasis(s2,K)
-
-            e1 = random_expansion(b1)
-            e2 = random_expansion(b2)
-
-            @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b2))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b2), grid(b2))*e2)
-            @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b1))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b1), grid(b1))*e2)
-            @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b1))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b1), grid(b1))*e1)
-            @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b2))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b2), grid(b2))*e1)
-
-            mr = matrix(restriction_operator(b1, b2))
-            me = matrix(extension_operator(b2, b1))
-            pinvme = pinv(me)
-            r = rand(size(pinvme,2))
-            @test pinvme*r ≈ mr*r
-        end
-    end
-
-    @test_throws AssertionError restriction_operator(SymBSplineTranslatesBasis(4,1), SymBSplineTranslatesBasis(3,1))
-    @test_throws AssertionError extension_operator(SymBSplineTranslatesBasis(4,1), SymBSplineTranslatesBasis(6,1))
-end
-
-# function test_orthonormalsplinebasis(T)
-#     b = OrthonormalSplineBasis(5,2,Float64)
-#     b = OrthonormalSplineBasis(5,2,T)
-#     @test name(b) == "Set of translates of a function (B spline of degree 2) (orthonormalized)"
-#     @test instantiate(OrthonormalSplineBasis,5)==OrthonormalSplineBasis(5,3)
-#
-#     G = sqrt(DualGram(Span(b.superdict)))
-#     e = zeros(eltype(G),size(G,1))
-#     e[1] = 1
-#     @test BasisFunctions.BasisFunctions.coefficients(b) ≈ G*e
-#
-#     d = BasisFunctions.primalgramcolumn(Span(b); atol=1e-3)
-#     @test d ≈ e
-#     @test typeof(Gram(Span(b))) <: IdentityOperator
-#
-#     n = 8
-#     for degree in 0:3
-#         b = Span(OrthonormalSplineBasis(n, degree, T))
-#         basis_ext = extend(b)
-#         r = restriction_operator(basis_ext, b)
-#         e = extension_operator(b, basis_ext)
-#         @test eye(n) ≈ matrix(r*e)
-#
-#         grid_ext = grid(basis_ext)
-#         L = evaluation_operator(b, grid_ext)
-#         e = random_expansion(b)
-#         z = L*e
-#         L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
-#         z2 = L2*e
-#         @test 1+maximum(abs.(z-z2)) ≈ T(1)
-#     end
-# end
-
-# function test_discrete_orthonormalsplinebasis(T)
-#     b = DiscreteOrthonormalSplineBasis(5,2,Float64)
-#     b = DiscreteOrthonormalSplineBasis(5,2,T)
-#     @test name(b) == "Set of translates of a function (B spline of degree 2) (orthonormalized, discrete)"
-#     @test instantiate(DiscreteOrthonormalSplineBasis,5)==DiscreteOrthonormalSplineBasis(5,3)
-#
-#     E = evaluation_operator(Span(b))
-#     e = zeros(eltype(E),size(E,1))
-#     e[1] = 1
-#     @test (E'*E*e) ≈ 5*e
-#     @test typeof(E) <: BasisFunctions.MultiplicationOperator
-#
-#     n = 8
-#     for degree in 0:3
-#         b = Span(DiscreteOrthonormalSplineBasis(n, degree, T))
-#         basis_ext = extend(b)
-#         r = restriction_operator(basis_ext, b)
-#         e = extension_operator(b, basis_ext)
-#         @test eye(n) ≈ matrix(r*e)
-#
-#         grid_ext = grid(basis_ext)
-#         L = evaluation_operator(b, grid_ext)
-#         e = random_expansion(b)
-#         z = L*e
-#         L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
-#         z2 = L2*e
-#         @test 1+maximum(abs.(z-z2)) ≈ T(1)
-#     end
-#     for dgr in 0:4, oversampling in 1:4, n in 10:11
-#         b = DiscreteOrthonormalSplineBasis(n,dgr,T; oversampling=oversampling)
-#
-#         e = zeros(T,n); e[1] = 1
-#         @test sqrt(DiscreteDualGram(Span(BSplineTranslatesBasis(n,dgr,T)); oversampling=oversampling))*e≈BasisFunctions.BasisFunctions.coefficients(b)
-#         @test DiscreteGram(Span(b); oversampling=oversampling)*e≈e
-#     end
-# end
-
-
-using QuadGK
-
-function test_dualsplinebasis(T)
-    n = 10; degree = 2;
-    tol = max(sqrt(eps(real(T))), 1e-16)
-    b = BSplineTranslatesBasis(n,degree)
-    bb = BasisFunctions.dual(b; rtol=tol, atol=tol)
-    @test dual(bb) == b
-    e = BasisFunctions.coefficients(random_expansion(b))
-
-    @test Gram(b; atol=tol, rtol=tol)*e ≈ DualGram(bb; atol=tol, rtol=tol)*e
-    @test Gram(bb; atol=tol, rtol=tol)*e ≈ DualGram(b; atol=tol, rtol=tol)*e
-    @test CompactTranslatesDict.dualgramcolumn(b; rtol=tol, atol=tol) ≈ BasisFunctions.coefficients(bb)
-    @test QuadGK.quadgk(x->b[1](x)*bb[1](x),infimum(support(b)), supremum(support(b)); rtol=tol, atol=tol)[1] - T(1) < sqrt(tol)
-    @test QuadGK.quadgk(x->b[1](x)*bb[2](x),infimum(support(b)), supremum(support(b)); rtol=tol, atol=tol)[1] - T(1) < sqrt(tol)
-end
-
-function test_discrete_dualsplinebasis(T)
-    for degree in 0:4, n in 10:11, oversampling=1:3
-        b = BSplineTranslatesBasis(n,degree, T)
-        d = discrete_dual(b; oversampling=oversampling)
-
-        e = zeros(T,n); e[1] = 1
-        @test DiscreteDualGram(b; oversampling=oversampling)*e≈BasisFunctions.coefficients(d)
-        E1 = matrix(discrete_dual_evaluation_operator(b; oversampling=oversampling))
-        oss = []
-        # For even degrees points on a coarse grid do not overlap with those on e fine grid.
-        if isodd(degree)
-            oss = [1, oversampling]
-        else
-            oss = [oversampling,]
-        end
-        for os in oss
-            E2 = matrix(evaluation_operator(d; oversampling = os))
-            E2test = E1[1:Int(oversampling/os):end,:]
-            @test E2test*e ≈ E2*e
-        end
-    end
-end
-
 function test_bspline_platform(T)
     #  1D
     init = 4
@@ -390,7 +181,7 @@ function test_bspline_platform(T)
         @test evaluation_operator(D,g)*e≈evaluation_matrix(D,g)*e
         @test evaluation_operator(D,g)*e≈evaluation_operator(P,g)*(matrix(DG)*e)
         @test evaluation_operator(D,g)'*evaluation_operator(P,g)*e ≈length(B)e
-        @test S*exp≈exp.(g)
+        @test S*exp≈broadcast(exp,g)
     end
 
     #  ND
@@ -426,7 +217,7 @@ function test_bspline_platform(T)
         @test (evaluation_operator(D,g)*e)[:]≈(evaluation_operator(P,g)*reshape(matrix(DG)*e[:],size(P)...))[:]
         @test evaluation_operator(D,g)'*evaluation_operator(P,g)*e ≈length(B)e
         f = (x,y)->exp(x*y)
-        @test S*f≈f.(g)
+        @test S*f≈broadcast(f,g)
     end
 
     init = [3,3]
@@ -460,27 +251,24 @@ function test_sparsity_speed(T)
         x = zeros(src(E1))
         b = zeros(dest(E1))
         # compilation
-        tic()
-        for i in 1:100
+        t = @timed for i in 1:100
             apply!(E1, x, b)
         end
-        t1=toq()
-        tic()
-        for i in 1:100
+        t1=t[2]
+        t = @timed for i in 1:100
             apply!(E2, x, b)
         end
-        t2=toq()
+        t2=t[2]
 
-        tic()
-        for i in 1:100
+        t = @timed for i in 1:100
             apply!(E1, x, b)
         end
-        t1=toq()
-        tic()
-        for i in 1:100
+        t1=t[2]
+
+        t = @timed for i in 1:100
             apply!(E2, x, b)
         end
-        t2=toq()
+        t2=t[2]
         #check whether sparsity is still the good default
         @test t2 < 10*t1
     end
