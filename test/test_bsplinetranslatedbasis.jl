@@ -40,9 +40,6 @@ function test_generic_periodicbsplinebasis(B,T)
 end
 
 function test_translatedbsplines(T)
-    B = BSplineTranslatesBasis(10,1)
-    x = [1e-4,.23,.94]
-    @test [CompactTranslatesDict.interval_index(B,t)[1] for t in x] == [1,3,10]
 
     tol = sqrt(eps(real(T)))
     n = 5
@@ -92,22 +89,20 @@ function test_translatedbsplines(T)
 
     # Test extension_operator and invertability of restriction_operator w.r.t. extension_operator.
     n = 8
-    if VERSION < v"0.7-"
-        for degree in 0:3
-            b = BSplineTranslatesBasis(n, degree, T)
-            basis_ext = extend(b)
-            r = restriction_operator(basis_ext, b)
-            e = extension_operator(b, basis_ext)
-            @test (VERSION < v"0.7-") ? abs(sum(eye(n)-matrix(r*e))) < tol : abs(sum(Matrix(1.0I, n, n) -matrix(r*e))) < tol
+    for degree in 0:3
+        b = BSplineTranslatesBasis(n, degree, T)
+        basis_ext = extend(b)
+        r = restriction_operator(basis_ext, b)
+        e = extension_operator(b, basis_ext)
+        @test (VERSION < v"0.7-") ? abs(sum(eye(n)-matrix(r*e))) < tol : abs(sum(Matrix(1.0I, n, n) -matrix(r*e))) < tol
 
-            grid_ext = grid(basis_ext)
-            L = evaluation_operator(b, grid_ext)
-            e = random_expansion(b)
-            z = L*e
-            L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
-            z2 = L2*e
-            @test maximum(abs.(z-z2)) < tol
-        end
+        grid_ext = grid(basis_ext)
+        L = evaluation_operator(b, grid_ext)
+        e = random_expansion(b)
+        z = L*e
+        L2 = evaluation_operator(basis_ext, grid_ext) * extension_operator(b, basis_ext)
+        z2 = L2*e
+        @test maximum(abs.(z-z2)) < tol
     end
 
 

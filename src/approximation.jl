@@ -1,31 +1,3 @@
-"""
-Makes sure that (i-1)/N <= x < i/N holds.
-Return (i, true) if x ≈ i/N
-else (i, false)
-"""
-function interval_index(B::Dictionary,x::Real)
-    L = length(B)
-    s = x*L
-    r =  round(s)
-    floor(Int,s)+1, s≈r
-end
-
-_element_spans_one(b::BSplineTranslatesBasis) = degree(b) == 0
-
-function first_index(b::BSplineTranslatesBasis, x::Real)
-            ii, on_edge = interval_index(b, x)
-    d = degree(b)
-    if d == 0
-        return ii, 1
-    end
-    if on_edge
-        return mod(ii-2, length(b))+1, d
-    else
-        return mod(ii-1, length(b))+1, d+1
-    end
-end
-
-
 ##################
 # Platform
 ##################
