@@ -1,3 +1,4 @@
+__precompile__()
 module CompactTranslatesDict
 
 using BasisFunctions, CardinalBSplines, Domains
