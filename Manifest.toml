@@ -15,7 +15,7 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[BasisFunctions]]
 deps = ["AbstractTrees", "DSP", "Domains", "FFTW", "FastGaussQuadrature", "FastTransforms", "GenericLinearAlgebra", "LinearAlgebra", "Plots", "QuadGK", "Random", "RecipesBase", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test"]
-git-tree-sha1 = "82e5330718f9da6ee2db7bb9ed3da2962a65b229"
+git-tree-sha1 = "b32c4e12fdf0b9f0724309d5a178537ad0165c65"
 repo-rev = "julia-0.7"
 repo-url = "https://github.com/daanhb/BasisFunctions.jl.git"
 uuid = "8ac202e8-8a12-11e8-0422-2b902fe89c2d"
@@ -35,7 +35,7 @@ version = "0.3.3"
 
 [[CardinalBSplines]]
 deps = ["QuadGK"]
-git-tree-sha1 = "57eda17db77762b06c878294634f2926ab6d2c68"
+git-tree-sha1 = "b7446af81285db9a19bd1c4069c063386fe0ac4d"
 repo-rev = "master"
 repo-url = "https://github.com/vincentcp/CardinalBSplines.git"
 uuid = "87d49508-7ad8-11e8-0eda-cb6920b58870"
@@ -60,10 +60,10 @@ uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "1.0.0"
 
 [[Conda]]
-deps = ["BinDeps", "Compat", "JSON", "Libdl", "VersionParsing"]
-git-tree-sha1 = "6358e179fb9ad0af5ca9cd4d7c691c413cc121f2"
+deps = ["Compat", "JSON", "VersionParsing"]
+git-tree-sha1 = "b76a441539d66a18ba34df28d34dc5b9202164a3"
 uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
-version = "0.8.1"
+version = "1.0.0"
 
 [[Contour]]
 deps = ["LinearAlgebra", "StaticArrays", "Test"]
@@ -94,9 +94,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Domains]]
 deps = ["IntervalSets", "LinearAlgebra", "Markdown", "StaticArrays"]
-git-tree-sha1 = "03d812a2c5d7dc47fce4a44fb90312bc394dd032"
+git-tree-sha1 = "a102f00d0b9d253df057ff71d2079359586506cf"
 repo-rev = "master"
-repo-url = "https://github.com/daanhb/Domains.jl.git"
+repo-url = "https://github.com/JuliaApproximation/Domains.jl.git"
 uuid = "a4a0b8aa-7ac0-11e8-2da9-8385f1ed8077"
 version = "0.0.1"
 
@@ -118,7 +118,7 @@ git-tree-sha1 = "afc2bad8c9e5d5243e0f0e9678f168f8179c0c1f"
 repo-rev = "master"
 repo-url = "https://github.com/MikaelSlevinsky/FastTransforms.jl"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.3.2+"
+version = "0.4.0"
 
 [[FillArrays]]
 deps = ["Compat", "LinearAlgebra", "Random", "SparseArrays"]
@@ -228,9 +228,9 @@ version = "0.5.0"
 
 [[Plots]]
 deps = ["Contour", "FixedPointNumbers", "GR", "JSON", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "RecipesBase", "Reexport", "Requires", "Showoff", "StaticArrays", "StatsBase"]
-git-tree-sha1 = "a89a0fc4b7b1973944d4617f00bb93ec37301bb3"
+git-tree-sha1 = "950065e8f296f65ea5f5876a0d0a768267198512"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "0.17.3"
+version = "0.17.4"
 
 [[Polynomials]]
 deps = ["Compat"]

@@ -1,10 +1,10 @@
 using CompactTranslatesDict
 
-if (VERSION < v"0.7-")
-    types = [Float64, BigFloat]
-else
-    types = (Float64,)
-end
+types = [Float64, BigFloat]
+
+
+include("test_banded_operators.jl")
+
 include("test_bsplinetranslatedbasis.jl")
 
 for T in types
@@ -12,6 +12,6 @@ for T in types
         test_generic_periodicbsplinebasis(BSplineTranslatesBasis, T)
         test_translatedbsplines(T)
         test_bspline_platform(T)
-        test_sparsity_speed(T)
+        # test_sparsity_speed(T)
     end
 end

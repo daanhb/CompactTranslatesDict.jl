@@ -106,27 +106,59 @@ function transform_to_grid(src::CompactTranslationDict, dest, grid; options...)
     CirculantOperator(src, dest, sample(grid, x->eval_kernel(s, x)); options...)
 end
 
-function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, grid::AbstractEquispacedGrid; sparse=true, options...)
-    r = nothing
-    if periodic_compatible_grid(s, grid)
-        lg = length(grid)
-        ls = length(s)
-        if lg == ls
-            r = CirculantOperator(s, dgs, sample(grid, x->eval_kernel(s, x)); options...)
-        elseif lg > ls
-            r = CirculantOperator(dgs, dgs, sample(grid, x->eval_kernel(s, x)); options...)*IndexExtensionOperator(s, dgs, 1:Int(lg/ls):length(dgs))
-        elseif lg < ls && has_extension(grid)
-            r = IndexRestrictionOperator(s, dgs, 1:Int(ls/lg):length(s))*CirculantOperator(s, s, sample(extend(grid, Int(ls/lg)), x->eval_kernel(s, x)); options...)
+function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, grid::AbstractEquispacedGrid; TYPE=IndexableVerticalBandedOperator, options...)
+    # r = nothing
+    # if TYPE != IndexableVerticalBandedOperator
+    #     if periodic_compatible_grid(s, grid)
+    #         lg = length(grid)
+    #         ls = length(s)
+    #         sampling_factor, rem = divrem(lg, ls)
+    #         @assert rem == 0
+    #         if lg == ls
+    #             r = CirculantOperator(s, dgs, sample(grid, x->eval_kernel(s, x)); options...)
+    #         elseif lg > ls
+    #             r = CirculantOperator(dgs, dgs, sample(grid, x->eval_kernel(s, x)); options...)*IndexExtensionOperator(s, dgs, 1:sampling_factor:length(dgs))
+    #         elseif lg < ls && has_extension(grid)
+    #             r = IndexRestrictionOperator(s, dgs, 1:sampling_factor:length(s))*CirculantOperator(s, s, sample(extend(grid, sampling_factor), x->eval_kernel(s, x)); options...)
+    #         else
+    #             r = default_evaluation_operator(s, dgs; options...)
+    #         end
+    #     else
+    #         warn("slow evaluation operator")
+    #         r = default_evaluation_operator(s, dgs; options...)
+    #     end
+    #     if TYPE == SparseOperator
+    #         return SparseOperator(r; options...)
+    #     else
+    #         return r
+    #     end
+    # else
+    lg = length(grid)
+    ls = length(s)
+    sampling_factor, rem = divrem(lg, ls)
+    if rem == 0
+        firstcolumn = sample(grid, x->eval_kernel(s, x))
+        a, offset = _get_array_offset(firstcolumn)
+        IndexableVerticalBandedOperator(s, dgs, a, sampling_factor, offset-1)
+    else
+        warn("slow evaluation operator")
+        default_evaluation_operator(s, dgs; options...)
+    end
+end
+
+function _get_array_offset(a)
+    b = a.!=0
+    f = findfirst(b)
+    if f==1
+        if b[end]
+            f = findlast(.!b)+1
+            L = sum(b)
+            vcat(a[f:end],a[1:L-length(a)+f]), f
         else
-            r = default_evaluation_operator(s, dgs; options...)
+            a[f:f+sum(b)-1], f
         end
     else
-        r = default_evaluation_operator(s, dgs; options...)
-    end
-    if sparse
-        return BasisFunctions.SparseOperator(r; options...)
-    else
-        return r
+        a[f:f+sum(b)-1], f
     end
 end
 

@@ -105,7 +105,7 @@ function test_translatedbsplines(T)
         @test maximum(abs.(z-z2)) < tol
     end
 
-
+    println("Expect 16 warnings")
     if T == Float64
         for K in 0:3
             for s2 in 5:6
@@ -234,40 +234,40 @@ function test_bspline_platform(T)
     @test evaluation_operator(D, g)*e≈Zop*e*length(D)
     @test BasisFunctions.Zt(platform, i)*Aop*e ≈ e
 end
-
-function test_sparsity_speed(T)
-    for d in 0:4
-        B = BSplineTranslatesBasis(1<<10, d, T)
-        E1 = evaluation_operator(B; sparse = false)
-        E2 = evaluation_operator(B; sparse = true)
-        typeof(E1)
-        @test typeof(E1) <: CirculantOperator
-        @test typeof(E2) <: MultiplicationOperator
-        x = zeros(src(E1))
-        b = zeros(dest(E1))
-        # compilation
-        t = @timed for i in 1:100
-            apply!(E1, x, b)
-        end
-        t1=t[2]
-        t = @timed for i in 1:100
-            apply!(E2, x, b)
-        end
-        t2=t[2]
-
-        t = @timed for i in 1:100
-            apply!(E1, x, b)
-        end
-        t1=t[2]
-
-        t = @timed for i in 1:100
-            apply!(E2, x, b)
-        end
-        t2=t[2]
-        #check whether sparsity is still the good default
-        @test t2 < 10*t1
-    end
-end
+#
+# function test_sparsity_speed(T)
+#     for d in 0:4
+#         B = BSplineTranslatesBasis(1<<10, d, T)
+#         E1 = evaluation_operator(B; sparse = false)
+#         E2 = evaluation_operator(B; sparse = true)
+#         typeof(E1)
+#         @test typeof(E1) <: IndexableVerticalBandedOperator
+#         @test typeof(E2) <: MultiplicationOperator
+#         x = zeros(src(E1))
+#         b = zeros(dest(E1))
+#         # compilation
+#         t = @timed for i in 1:100
+#             apply!(E1, x, b)
+#         end
+#         t1=t[2]
+#         t = @timed for i in 1:100
+#             apply!(E2, x, b)
+#         end
+#         t2=t[2]
+#
+#         t = @timed for i in 1:100
+#             apply!(E1, x, b)
+#         end
+#         t1=t[2]
+#
+#         t = @timed for i in 1:100
+#             apply!(E2, x, b)
+#         end
+#         t2=t[2]
+#         #check whether sparsity is still the good default
+#         @test t2 < 10*t1
+#     end
+# end
 
 
 # exit()
