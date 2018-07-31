@@ -56,7 +56,6 @@ end
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
-    @test matrix(C[1,:]) == c[1,:]
 
 
     M = evaluation_operator(s⊗d,oversampling=2)
@@ -78,6 +77,4 @@ end
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
-    @test matrix(C[1,:]) == c[1,:]
-    @test matrix(C[:,1]) == c[:,1]
 end

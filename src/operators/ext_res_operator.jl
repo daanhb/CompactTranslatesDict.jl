@@ -1,44 +1,72 @@
-const My1DIndexType = Union{Int,AbstractVector{Int}}
+const My1DIndexType = Union{AbstractVector{Int}}
 if VERSION < v"0.7-"
-    const MyNDIndexType{N} = Union{CartesianIndex{N},AbstractVector{CartesianIndex{N}},CartesianRange{CartesianIndex{N}}}
+    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianRange{CartesianIndex{N}}}
 else
-    const MyNDIndexType{N} = Union{CartesianIndex{N},AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
+    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
 end
 const MyIndexType = Union{My1DIndexType,MyNDIndexType}
 
 struct ExtResOperator{ELT} <: BasisFunctions.DictionaryOperator{ELT}
     src::Dictionary
     dest::Dictionary
-    srcindices
-    destindices
+    srcextension    ::IndexExtensionOperator
+    destrestriction ::IndexRestrictionOperator
     op::DictionaryOperator{ELT}
+    RopE::CompositeOperator
+    function ExtResOperator{ELT}(src, dest, srcindices, destindices, op) where ELT
+        @assert !isa(src, Subdictionary)
+        @assert !isa(dest, Subdictionary)
+        if size(srcindices) != size(src)
+            res_src = src[srcindices]
+        else
+            res_src = src
+        end
+        if size(destindices) != size(dest)
+            res_dest = dest[destindices]
+        else
+            res_dest = dest
+        end
+        E = IndexExtensionOperator(res_src, src, srcindices)
+        R = IndexRestrictionOperator(dest, res_dest, destindices)
+        new(res_src, res_dest, E, R, op, R*op*E)
+    end
 end
 
-function ExtResOperator(destindices::My1DIndexType, op::DictionaryOperator, srcindices::My1DIndexType)
+srcindices(M::ExtResOperator) = subindices(M.srcextension)
+destindices(M::ExtResOperator) = subindices(M.destrestriction)
+
+function ExtResOperator(destindices::My1DIndexType, op::DictionaryOperator{ELT}, srcindices::My1DIndexType) where{ELT}
     @assert is_fastly_indexable(op)
-    ExtResOperator(src(op)[srcindices], dest(op)[destindices], srcindices, destindices, op)
+    ExtResOperator{ELT}(src(op), dest(op), srcindices, destindices, op)
 end
 
-function ExtResOperator(destindices::MyNDIndexType, op::TensorProductOperator, srcindices::MyNDIndexType)
-    @assert VERSION < v"0.7-" ? reduce(&, true, map(is_fastly_indexable, elements(op))) : reduce(&, map(is_fastly_indexable, elements(op)); init=true) 
-    ExtResOperator(src(op)[srcindices], dest(op)[destindices], srcindices, destindices, op)
+function ExtResOperator(destindices::MyNDIndexType, op::TensorProductOperator{ELT}, srcindices::MyNDIndexType) where {ELT}
+    @assert is_fastly_indexable(op)
+    ExtResOperator{ELT}(src(op), dest(op), srcindices, destindices, op)
 end
+
+apply!(M::ExtResOperator, a, b) = apply!(M.RopE, a, b)
+
+unsafe_wrap_operator(src, dest, op::ExtResOperator{ELT}) where ELT =
+    ExtResOperator{ELT}(full_dict(src), full_dict(dest), srcindices(op),  destindices(op), op.op)
+
+full_dict(d::Subdictionary) = superdict(d)
+full_dict(d::Dictionary) = d
+
+
+is_fastly_indexable(::ExtResOperator) = true
+
+is_fastly_indexable(a...) = false
+
+is_fastly_indexable(T::TensorProductOperator) = VERSION < v"0.7-" ?
+    reduce(&, true, map(is_fastly_indexable, elements(T))) :
+    reduce(&, map(is_fastly_indexable, elements(T)); init=true)
 
 ExtResOperator(op::DictionaryOperator, srcindices::MyIndexType) =
     ExtResOperator(eachindex(dest(op)), op, srcindices)
 
 ExtResOperator(destindices::MyIndexType, op::DictionaryOperator) =
     ExtResOperator(destindices, op, eachindex(src(op)))
-
-# ExtResOperator(res::IndexRestrictionOperator, op::DictionaryOperator, ext::IndexExtensionOperator) =
-#     ExtResOperator(subindices(res), op, subindices(ext))
-#
-# ExtResOperator(op::DictionaryOperator, ext::IndexExtensionOperator) =
-#     ExtResOperator(op, subindices(ext))
-#
-# ExtResOperator(res::IndexRestrictionOperator, op::DictionaryOperator) =
-#     ExtResOperator(subindices(res), op)
-
 
 getindex(M::DictionaryOperator, i::My1DIndexType, j::My1DIndexType) =
     ExtResOperator(i, M, j)
@@ -50,13 +78,28 @@ getindex(M::DictionaryOperator, i::My1DIndexType, j::Colon) =
     ExtResOperator(i, M)
 
 getindex(M::ExtResOperator, i::My1DIndexType, j::My1DIndexType) =
-    ExtResOperator(M.destindices[i], M.op, M.srcindices[j])
+    ExtResOperator(destindices(M)[i], M.op, srcindices(M)[j])
 
 getindex(M::ExtResOperator, i::Colon, j::My1DIndexType) =
-    ExtResOperator(M.destindices, M.op, M.srcindices[j])
+    ExtResOperator(destindices(M), M.op, srcindices(M)[j])
 
 getindex(M::ExtResOperator, i::My1DIndexType, j::Colon) =
-    ExtResOperator(M.destindices[i], M.op, M.srcindices)
+    ExtResOperator(destindices(M)[i], M.op, srcindices(M))
+
+# TODO implement more of these
+function getindex(M::ExtResOperator, i::MyNDIndexType, j::My1DIndexType)
+    @assert length(size(destindices(M))) > 1
+    ExtResOperator(destindices(M)[i], M.op, srcindices(M)[j])
+end
+
+if VERSION < v"0.7-"
+    getindex(cr::CartesianRange, i::AbstractVector{Int}) = collect(cr)[i]
+end
+
+function getindex(M::ExtResOperator, i::My1DIndexType, j::MyNDIndexType)
+    @assert length(size(srcindices(M))) > 1
+    ExtResOperator(destindices(M)[i], M.op, srcindices(M)[i])
+end
 
 getindex(M::TensorProductOperator, i::MyNDIndexType, j::MyNDIndexType) =
     ExtResOperator(i, M, j)
@@ -89,16 +132,16 @@ end
 
 
 getindex(M::ExtResOperator, i::Int, j::Int) =
-    fast_getindex(M.op, M.destindices[i], M.srcindices[j])
+    fast_getindex(M.op, destindices(M)[i], srcindices(M)[j])
 
 matrix(M::ExtResOperator) =
-    fast_matrix(M, M.op, M.srcindices, M.destindices)
+    fast_matrix(M, M.op, srcindices(M), destindices(M))
 
 fast_matrix(M::ExtResOperator, T::TensorProductOperator, srcindices::MyNDIndexType, destindices::MyNDIndexType) =
     fast_matrix!(_zeros(M), elements(T), srcindices, destindices)
 
 _zeros(M::ExtResOperator) =
-    _zeros(eltype(M), size(M), M.destindices, M.srcindices)
+    _zeros(eltype(M), size(M), destindices(M), srcindices(M))
 
 _zeros(::Type{T}, size, destindices, srcindices) where {T} =
     zeros(T, size)
