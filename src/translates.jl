@@ -167,7 +167,7 @@ function grid_evaluation_operator(s::D, dgs::GridBasis, grid::ProductGrid;
     tensorproduct([grid_evaluation_operator(si, dgsi, gi; options...) for (si, dgsi, gi) in zip(elements(s), elements(dgs), elements(grid))]...)
 end
 
-Gram(s::CompactTranslationDict; options...) = CirculantOperator(s, s, primalgramcolumn(s; options...))
+Gram(s::CompactTranslationDict; options...) = CirculantOperator(s, s, primalgramcolumn(s; options...); options...)
 
 function UnNormalizedGram(s::CompactTranslationDict, oversampling = 1)
     grid = BasisFunctions.oversampled_grid(s, oversampling)

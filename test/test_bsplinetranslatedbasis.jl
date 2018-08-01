@@ -25,15 +25,13 @@ function test_generic_periodicbsplinebasis(B,T)
     @test 0 < supremum(CompactTranslatesDict.kernel_span(b)) - infimum(CompactTranslatesDict.kernel_span(b)) < BasisFunctions.period(b)
 
     @test instantiate(B, 4, Float16)==B(4,3,Float16)
-    @test promote_domaintype(b, Float16)==B(n,CompactTranslatesDict.degree(b),Float16)
-    @test promote_domaintype(b, complex(Float64))==B(n,CompactTranslatesDict.degree(b),Complex{Float64})
     @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
     @test BasisFunctions.grid(b)==PeriodicEquispacedGrid(n,0,1)
     @test BasisFunctions.period(b)==T(1)
     @test BasisFunctions.stepsize(b)==T(1//5)
 
     n = 3
-    b=B(n,1,T)
+    b=B(n,1,T; scaled=false)
     @test abs(sum(matrix(Gram(b)) - [2//3 1//6 1//6; 1//6 2//3 1//6;1//6 1//6 2//3]//n)) < tol
     @test abs(sum(matrix(DualGram(b)) - [5/3 -1/3 -1/3; -1/3 5/3 -1/3; -1/3 -1/3 5/3]*n)) < tol
 
@@ -44,7 +42,7 @@ function test_translatedbsplines(T)
     tol = sqrt(eps(real(T)))
     n = 5
     bb = BSplineTranslatesBasis(n, 1, T; scaled=true)
-    b = BSplineTranslatesBasis(n, 1, T)
+    b = BSplineTranslatesBasis(n, 1, T; scaled=false)
     e = rand(n)
     @test norm(Gram(b)*e-Gram(bb)*e/n) < tol
 
@@ -234,73 +232,17 @@ function test_bspline_platform(T)
     @test evaluation_operator(D, g)*e≈Zop*e*length(D)
     @test BasisFunctions.Zt(platform, i)*Aop*e ≈ e
 end
-#
-# function test_sparsity_speed(T)
-#     for d in 0:4
-#         B = BSplineTranslatesBasis(1<<10, d, T)
-#         E1 = evaluation_operator(B; sparse = false)
-#         E2 = evaluation_operator(B; sparse = true)
-#         typeof(E1)
-#         @test typeof(E1) <: IndexableVerticalBandedOperator
-#         @test typeof(E2) <: MultiplicationOperator
-#         x = zeros(src(E1))
-#         b = zeros(dest(E1))
-#         # compilation
-#         t = @timed for i in 1:100
-#             apply!(E1, x, b)
-#         end
-#         t1=t[2]
-#         t = @timed for i in 1:100
-#             apply!(E2, x, b)
-#         end
-#         t2=t[2]
-#
-#         t = @timed for i in 1:100
-#             apply!(E1, x, b)
-#         end
-#         t1=t[2]
-#
-#         t = @timed for i in 1:100
-#             apply!(E2, x, b)
-#         end
-#         t2=t[2]
-#         #check whether sparsity is still the good default
-#         @test t2 < 10*t1
-#     end
-# end
 
-
-# exit()
-
-# @testset begin test_discrete_dualsplinebasis(BigFloat) end
-# @testset begin test_dualsplinebasis(BigFloat) end
-#
-# @testset begin test_translatedbsplines(BigFloat) end
-# @testset begin test_translatedsymmetricbsplines(BigFloat) end
-# @testset begin test_generic_periodicbsplinebasis(BigFloat) end
-# @testset begin test_bspline_platform(BigFloat) end
-# @testset begin test_sparsity_speed(BigFloat) end
-
-
-
-# @testset begin test_discrete_orthonormalsplinebasis(BigFloat) end
-# @testset begin test_orthonormalsplinebasis(BigFloat) end
-
-
-# using Plots
-# using BasisFunctions
+# using Plots, BasisFunctions, CompactTranslatesDict
 # n = 7
 # k = 0
 # b = BSplineTranslatesBasis(n,k)
 # t = linspace(-0,2,200)
-# f = map(x->unsafe_eval_element(b,1,x), t)
-# using Plots
+# f = map(x->BasisFunctions.unsafe_eval_element(b,1,x), t)
+#
 # plot!(t,f)
-# @which unsafe_eval_element(b,1,.25)
-# BasisFunctions.fun(b)
-# f = map(BasisFunctions.fun(b), t)
+# f = CompactTranslatesDict.eval_kernel.(b, t)
 # plot!(t,f)
 # f = map(x->BasisFunctions.eval_expansion(b,ones(n),x),t)
 # # f = map(x->BasisFunctions.eval_expansion(b,[1,0,0,0,0,0,0,0,0,0],x),t)
 # plot!(t,f,ylims=[-n,2n])
-#

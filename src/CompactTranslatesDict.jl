@@ -11,7 +11,7 @@ end
 
 import Base: ==, getindex
 
-using BasisFunctions: ShiftedIndex, ShiftedIndexList
+using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues
 import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering
 import BasisFunctions: has_unitary_transform, support, has_grid, grid, period
 import BasisFunctions: stepsize, has_grid_transform, compatible_grid, approx_length
@@ -19,6 +19,7 @@ import BasisFunctions: native_nodes, transform_from_grid, transform_to_grid
 import BasisFunctions: grid_evaluation_operator, unsafe_eval_element
 import BasisFunctions: Gram, UnNormalizedGram, dual, dict_in_support
 import BasisFunctions: matrix, apply!, adjoint, unsafe_wrap_operator
+import BasisFunctions: instantiate, extension_operator, restriction_operator, resize
 
 export is_biorthogonal, is_basis, ordering, has_unitary_transform, support, has_grid
 export grid, period, Gram

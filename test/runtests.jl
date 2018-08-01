@@ -12,6 +12,5 @@ for T in types
         test_generic_periodicbsplinebasis(BSplineTranslatesBasis, T)
         test_translatedbsplines(T)
         test_bspline_platform(T)
-        # test_sparsity_speed(T)
     end
 end
