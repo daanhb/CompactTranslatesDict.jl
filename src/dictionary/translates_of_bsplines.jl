@@ -2,10 +2,28 @@
 using CardinalBSplines
 abstract type DiffPeriodicBSplineBasis{K,T,D} <: CompactTranslationDict{T}
 end
+
+# For the B spline with degree 1 (hat functions) the MidpointEquispacedGrid does not lead to evaluation_matrix that is non singular
+compatible_grid(b::DiffPeriodicBSplineBasis, grid::MidpointEquispacedGrid) = iseven(degree(b)) &&
+    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
+
+compatible_grid(b::DiffPeriodicBSplineBasis, grid::PeriodicEquispacedGrid) = isodd(degree(b)) &&
+    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
+    # we use a PeriodicEquispacedGrid in stead
+
+grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ? PeriodicEquispacedGrid(length(b), support(b)) : MidpointEquispacedGrid(length(b), support(b))
+
+kernel_span(b::DiffPeriodicBSplineBasis) = interval(domaintype(b)(0), stepsize(b)*domaintype(b)(degree(b)+1))
+
+eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{K,T,D}, x) where {K,T,D} = (n = length(b); sqrt(T(n))*diff_evaluate_periodic_Bspline(Val{K}, Val{D}, n*x, n, T))::T
+
+
 abstract type PeriodicBSplineBasis{K,T} <: DiffPeriodicBSplineBasis{K,T,0}
 end
 
-degree(b::B) where {K,B<:DiffPeriodicBSplineBasis{K}} = K
+degree(b::DICT where DICT <: DiffPeriodicBSplineBasis{K} ) where {K} = K
+
+Bdiff(b::DICT where DICT <: DiffPeriodicBSplineBasis{K,T,D} ) where {K,T,D} = D
 
 function extension_operator(s1::PeriodicBSplineBasis, s2::PeriodicBSplineBasis; options...)
     @assert degree(s1) == degree(s2)
@@ -57,8 +75,6 @@ eval_kernel(b::BSplineTranslatesBasis{K,T,false}, x) where {K,T} = (n = length(b
 
 scaled(b::BSplineTranslatesBasis{K,T,SCALED}) where {K,T,SCALED} = SCALED
 
-kernel_span(b::BSplineTranslatesBasis{K,T}) where {K,T} = interval(domaintype(b)(0), stepsize(b)*real(T)(degree(b)+1))
-
 name(b::BSplineTranslatesBasis) = name(typeof(b))*" (B spline of degree $(degree(b)))"
 
 ==(b1::BSplineTranslatesBasis{K1,T1}, b2::BSplineTranslatesBasis{K2,T2}) where {K1,K2,T1,T2} = T1==T2 && K1==K2 && length(b1)==length(b2)
@@ -66,14 +82,6 @@ name(b::BSplineTranslatesBasis) = name(typeof(b))*" (B spline of degree $(degree
 instantiate(::Type{BSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = BSplineTranslatesBasis(n,3,T)
 
 resize(b::BSplineTranslatesBasis{K,T}, n::Int) where {K,T} = BSplineTranslatesBasis(n, degree(b), T)
-
-# For the B spline with degree 1 (hat functions) the MidpointEquispacedGrid does not lead to evaluation_matrix that is non singular
-compatible_grid(b::BSplineTranslatesBasis{K}, grid::MidpointEquispacedGrid) where {K} = iseven(K) &&
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
-compatible_grid(b::BSplineTranslatesBasis{K}, grid::PeriodicEquispacedGrid) where {K} = isodd(K) &&
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
-    # we use a PeriodicEquispacedGrid in stead
-grid(b::BSplineTranslatesBasis{K}) where {K} = isodd(K) ? PeriodicEquispacedGrid(length(b), support(b)) : MidpointEquispacedGrid(length(b), support(b))
 
 function _binomial_circulant(s::BSplineTranslatesBasis{K,T,SCALED}) where {K,T,SCALED}
     A = coeftype(s)
@@ -112,3 +120,17 @@ function primalgramcolumnelement(s::BSplineTranslatesBasis{K,T,SCALED}, i::Int; 
         A(r)/length(s)
     end
 end
+
+"""
+  Basis consisting of differentiated dilated, translated, and periodized cardinal B splines on the interval [0,1].
+"""
+struct DiffBSplineTranslatesBasis{K,T,D} <: DiffPeriodicBSplineBasis{K,T,D}
+    n               :: Int
+end
+
+DiffBSplineTranslatesBasis(n::Int, DEGREE::Int, D::Int, ::Type{T} = Float64) where {T} =
+    DiffBSplineTranslatesBasis{DEGREE,T,D}(n)
+
+instantiate(::Type{DiffBSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = DiffBSplineTranslatesBasis(n,3,1,T)
+
+resize(b::DiffBSplineTranslatesBasis, n::Int) = DiffBSplineTranslatesBasis(n, degree(b), Bdiff(b), codomaintype(b))
