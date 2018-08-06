@@ -1,11 +1,12 @@
 __precompile__()
 module CompactTranslatesDict
 
-using BasisFunctions, CardinalBSplines, Domains, SymbolicDifferentialEquations
 
-using SymbolicDifferentialEquations: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator
-using SymbolicDifferentialEquations: dimension_names, coefficient, operator, scalar, dimension_name
+include("SymbolicDifferentialOperators/SymbolicDifferentialOperators.jl")
+using .SymbolicDifferentialOperators: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator, AbstractDiffOperator
+using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, scalar, dimension_name
 
+using BasisFunctions, CardinalBSplines, Domains
 
 if VERSION < v"0.7-"
     nothing
@@ -15,7 +16,7 @@ end
 
 import Base: ==, getindex
 
-using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coeftype
+using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coeftype, ProductGrid
 import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering
 import BasisFunctions: has_unitary_transform, support, has_grid, grid, period
 import BasisFunctions: stepsize, has_grid_transform, compatible_grid, approx_length
