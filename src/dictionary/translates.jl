@@ -123,6 +123,7 @@ end
 function _get_array_offset(a)
     b = a.!=0
     f = findfirst(b)
+    (f==nothing) && (f=0)
     if f==1
         if b[end]
             f = findlast(.!b)+1
