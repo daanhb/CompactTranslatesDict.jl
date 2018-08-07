@@ -12,7 +12,7 @@ order(diffoperator::AbstractDiffOperator) = diffoperator.order
 dictionary(::AbstractDiffOperator) = Dict{Char,Int}()
 
 import Base.show
-show(io::IO, d::AbstractDiffOperator) = show(io, string(d))
+show(io::IO, d::AbstractDiffOperator) = print(io, string(d))
 
 abstract type AbstractDiffCoefficient end
 

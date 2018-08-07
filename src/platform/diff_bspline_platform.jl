@@ -1,3 +1,4 @@
+
 function bspline_basis(::Type{T}, size::NTuple{N,Int}, degree::NTuple{N,Int}, d::SumDifferentialOperator, dns::NTuple{N,Char}=dimension_names(d)) where N where T
     dicts = tuple(map(x->bspline_basis(T, size, degree, operator(x), dns), SymbolicDifferentialOperators.elements(d))...)
     coefficients = [T(scalar(coefficient(x))) for x in SymbolicDifferentialOperators.elements(d)]
@@ -23,7 +24,7 @@ function bspline_basis(::Type{T}, size::NTuple{N,Int}, degree::NTuple{N,Int}, d:
 end
 
 bspline_basis(::Type{T}, size::NTuple{N,Int}, degree::NTuple{N,Int}, d::IdentityDifferentialOperator, dns::NTuple{N,Char}) where {N,T} =
-    tensor_product_dict(size, degree, tuple(diff...), T)
+    tensor_product_dict(size, degree, ntuple(k->0,Val(N)), T)
 
 bspline_evaluation_operator(::Type{T}, size::NTuple{N,Int}, degree::NTuple{N,Int}, grid::ProductGrid, d::SymbolicDifferentialOperators.AbstractDiffOperator, dns::NTuple{N,Char}=dimension_names(d)) where {N,T} =
     evaluation_operator(bspline_basis(T, size, degree, d, dns), grid)
