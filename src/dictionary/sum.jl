@@ -26,8 +26,15 @@ coefficients(S::CompactTranslationDictSum) = S.coefficients
 unsafe_eval_element(dict::CompactTranslationDictSum, i::ProductIndex, x) =
     sum(c*unsafe_eval_element(e, i, x) for (c,e) in zip(coefficients(dict),elements(dict)))
 
+oversampled_grid(dict::CompactTranslationDictSum, sampling_factor::Real) = ProductGrid([oversampled_grid(e, sampling_factor) for e in elements(dict.superdict)]...)
+
 resize(dict::CompactTranslationDictSum, s) = (@assert(size(dict)==s); dict)
 
 grid_evaluation_operator(S::CompactTranslationDictSum, dgs::GridBasis, grid::ProductGrid; options...) =
     OperatorSum(tuple([tensorproduct([grid_evaluation_operator(si, dgsi, gi; options...) for (si, dgsi, gi) in zip(elements(s), elements(dgs), elements(grid))]...)
-                for s in elements(S)]...), coefficients(S))
+        for s in elements(S)]...), coefficients(S))
+
+function UnNormalizedGram(s::CompactTranslationDictSum, oversampling = 1)
+    grid = oversampled_grid(s, oversampling)
+    TensorCirculantOperator(evaluation_operator(s, grid)'*evaluation_operator(s, grid))
+end

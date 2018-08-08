@@ -158,10 +158,3 @@ primalgramcolumnelement(s::CompactTranslationDict, i::Int; options...) =
     defaultprimalgramcolumnelement(s, i; options...)
 
 defaultprimalgramcolumnelement(s::Dictionary1d, i::Int; options...)  = dot(s, 1, i; options...)
-
-"""
-  The function set that correspands to the dual set ``Ψ={ψ_i}_{i∈ℕ}`` of the given set ``Φ={ϕ_i}_{i∈ℕ}``.
-
-"""
-dual(set::CompactTranslationDict; options...) =
-    DualCompactTranslationDict(set; options...)

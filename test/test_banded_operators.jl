@@ -1,5 +1,6 @@
 using BasisFunctions, BasisFunctions.Test
 using CompactTranslatesDict
+using CompactTranslatesDict.SymbolicDifferentialOperators
 
 if VERSION < v"0.7-"
     using Base.Test
@@ -77,4 +78,18 @@ end
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
+end
+
+
+@testset "$(rpad("test Gram operators",80))" begin
+
+    D = CompactTranslatesDict.bspline_basis(Float64, (5,5), (2,2), 1+2δx*δy)
+    G = BasisFunctions.oversampled_grid(D, 2)
+    C = BasisFunctions.UnNormalizedGram(D, 2)
+    E = evaluation_operator(D, G)
+    e = rand(BasisFunctions.src(C))
+    @test C*e ≈ (E'E)*e
+    @test (inv(C)*C)*e≈e
+    @test inv(C)*(C*e)≈e
+    @test (.1*(inv(C)*C))*e≈e/10
 end

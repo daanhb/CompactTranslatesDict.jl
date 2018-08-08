@@ -34,15 +34,16 @@ src(op::OperatorSum) = src(element(op, 1))
 dest(op::OperatorSum) = dest(element(op, 1))
 
 function apply!(op::OperatorSum{S,T,N}, dest, src, coef_dest, coef_src) where {S,T,N}
-    scratch = op.scratch
-    coef_dest .= 0
+    coef_dest[:] .= 0
 
     for j in 1:N
-        apply!(element(op, j), scratch, coef_src)
+        apply!(element(op, j), op.scratch, coef_src)
         c = op.coefficients[j]
         for i in eachindex(coef_dest)
-            coef_dest[i] += c * scratch[i]
+            coef_dest[i] += c * op.scratch[i]
         end
     end
     coef_dest
 end
+
+adjoint(op::OperatorSum) = OperatorSum(adjoint.(elements(op)), conj.(coefficients(op)))

@@ -17,8 +17,8 @@ end
 import Base: ==, getindex
 
 using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coeftype, ProductGrid
-using BasisFunctions: forward_fourier_operator, op_eltypes
-import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering
+using BasisFunctions: forward_fourier_operator, op_eltypes, DictionaryOperator
+import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering, oversampled_grid
 import BasisFunctions: has_unitary_transform, support, has_grid, grid, period
 import BasisFunctions: stepsize, has_grid_transform, compatible_grid, approx_length
 import BasisFunctions: native_nodes, transform_from_grid, transform_to_grid

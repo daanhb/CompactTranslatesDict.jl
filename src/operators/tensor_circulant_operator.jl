@@ -60,7 +60,7 @@ inner_array(C::TensorCirculantOperator) = C.eigenvaluematrix
 similar_operator(op::TensorCirculantOperator, src, dest) =
     TensorCirculantOperator(src, dest, op.eigenvaluematrix)
 
-inv(C::TensorCirculantOperator) = TensorCirculantOperator(dest(C), src(C), inv(superoperator(C)), 1 ./ C.eigenvaluematrix)
+inv(C::TensorCirculantOperator{A,N}) where {A,N} = TensorCirculantOperator{A,N}(dest(C), src(C), C.F, C.iF, 1 ./ C.eigenvaluematrix)
 
 function element_wise_pinv(a::AbstractArray, tol)
     r = pinv.(a)
@@ -72,10 +72,10 @@ end
 pinv(C::TensorCirculantOperator{T}, tolerance = eps(numtype(C))) where {T} = TensorCirculantOperator(src(c), dest(c), element_wise_pinv(C.eigenvaluematrix, tolerance))
 
 for op in (:+, :-, :*)
-    @eval $op(c1::TensorCirculantOperator{T}, c2::TensorCirculantOperator{T}) where {T} = TensorCirculantOperator(src(c2), dest(c1), $(op).(inner_array(c1),inner_array(c2)))
+    @eval $op(c1::TensorCirculantOperator{A,N}, c2::TensorCirculantOperator{A,N}) where {A,N} = TensorCirculantOperator{A,N}(src(c2), dest(c1), c1.F, c2.iF, broadcast($op,inner_array(c1),inner_array(c2)))
 end
 
-*(scalar::Real, c::TensorCirculantOperator) = TensorCirculantOperator(src(c), dest(c), scalar*inner_array(c))
+*(scalar::Real, c::TensorCirculantOperator{A,N}) where {A,N} = TensorCirculantOperator{A,N}(src(c), dest(c), c.F, c.iF, scalar*inner_array(c))
 *(c::TensorCirculantOperator, scalar::Real) = scalar*c
 
 apply!(c::TensorCirculantOperator, coef_dest, coef_src) = apply!(c, coef_dest, coef_src, Val{isreal(c)})
