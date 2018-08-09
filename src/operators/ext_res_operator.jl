@@ -198,7 +198,7 @@ fast_getindex(M::TensorProductOperator, i::CartesianIndex, j::CartesianIndex) =
         s *= string(l[i])*"*"
     end
     s *= string(l[end])
-    return parse(s)
+    return Meta.parse(s)
 end
 
 fast_getindex(M::OperatorSum, i::CartesianIndex, j::CartesianIndex) =
@@ -211,5 +211,5 @@ fast_getindex(M::OperatorSum, i::CartesianIndex, j::CartesianIndex) =
         s *= string(l[i])*"+"
     end
     s *= string(l[end])
-    return parse(s)
+    return Meta.parse(s)
 end

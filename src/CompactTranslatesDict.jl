@@ -1,7 +1,6 @@
 __precompile__()
 module CompactTranslatesDict
 
-
 include("SymbolicDifferentialOperators/SymbolicDifferentialOperators.jl")
 using .SymbolicDifferentialOperators: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator, AbstractDiffOperator
 using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, scalar, dimension_name
@@ -9,7 +8,7 @@ using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, sc
 using BasisFunctions, CardinalBSplines, Domains
 
 if VERSION < v"0.7-"
-    nothing
+    using Compat
 else
     using LinearAlgebra, FFTW
 end
@@ -17,12 +16,12 @@ end
 import Base: ==, getindex
 
 using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coeftype, ProductGrid
-using BasisFunctions: forward_fourier_operator, op_eltypes, DictionaryOperator
+using BasisFunctions: forward_fourier_operator, op_eltypes, DictionaryOperator, ×
 import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering, oversampled_grid
 import BasisFunctions: has_unitary_transform, support, has_grid, grid, period
 import BasisFunctions: stepsize, has_grid_transform, compatible_grid, approx_length
 import BasisFunctions: native_nodes, transform_from_grid, transform_to_grid
-import BasisFunctions: grid_evaluation_operator, unsafe_eval_element
+import BasisFunctions: grid_evaluation_operator, unsafe_eval_element, similar_dictionary
 import BasisFunctions: Gram, UnNormalizedGram, dual, dict_in_support
 import BasisFunctions: matrix, apply!, adjoint, unsafe_wrap_operator
 import BasisFunctions: instantiate, extension_operator, restriction_operator, resize
@@ -32,12 +31,16 @@ export is_biorthogonal, is_basis, ordering, has_unitary_transform, support, has_
 export grid, period, Gram
 
 export CompactPeriodicTranslationDict, dual, discrete_dual
-export BSplineTranslatesBasis, bspline_platform, DiffBSplineTranslatesBasis
-export degree, Bdiff
+export BSplineTranslatesBasis, DiffBSplineTranslatesBasis
+export degree, Bdiff, src, dest
 export IndexableHorizontalBandedOperator, IndexableVerticalBandedOperator, matrix
 export CompactTranslatesTensorProductDict, BSplineTensorProductDict, evaluation_operator
+export bspline_platform, primal, dual, sampler, A, Zt, ×
+
 
 export ⊗
+
+include("basisfunctions.jl")
 
 include("operators/tensor_circulant_operator.jl")
 include("operators/banded_operators.jl")

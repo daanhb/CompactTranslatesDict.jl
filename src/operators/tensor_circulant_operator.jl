@@ -61,6 +61,8 @@ similar_operator(op::TensorCirculantOperator, src, dest) =
     TensorCirculantOperator(src, dest, op.eigenvaluematrix)
 
 inv(C::TensorCirculantOperator{A,N}) where {A,N} = TensorCirculantOperator{A,N}(dest(C), src(C), C.F, C.iF, 1 ./ C.eigenvaluematrix)
+adjoint(C::TensorCirculantOperator{A,N}) where {A,N} = TensorCirculantOperator{A,N}(dest(C), src(C), C.F, C.iF, fft(Matrix(ifft(C.eigenvaluematrix)')))
+
 
 function element_wise_pinv(a::AbstractArray, tol)
     r = pinv.(a)
@@ -89,39 +91,23 @@ function apply!(c::TensorCirculantOperator, coef_dest, coef_src, ::Type{Val{true
     apply!(c.F, c.Fscratch, coef_src)
     c.Fscratch .*= c.eigenvaluematrix
     apply!(c.iF, c.iFscratch, c.Fscratch)
-    copy!(coef_dest, real(c.iFscratch))
+    copyto!(coef_dest, real(c.iFscratch))
 end
 
 
 apply_inplace!(c::TensorCirculantOperator, coef_dest) = apply_inplace!(c, coef_dest, Val{isreal(c)})
 function apply_inplace!(c::TensorCirculantOperator, coef_dest, ::Type{Val{false}})
-    copy!(c.Fscratch, coef_dest)
+    copyto!(c.Fscratch, coef_dest)
     apply_inplace!(c.F, c.Fscratch)
     c.Fscratch .*= c.eigenvaluematrix
     apply_inplace!(c.iF, c.Fscratch)
-    copy!(coef_dest, c.Fscratch)
+    copyto!(coef_dest, c.Fscratch)
 end
 
 function apply_inplace!(c::TensorCirculantOperator, coef_dest, ::Type{Val{true}})
-    copy!(c.Fscratch, coef_dest)
+    copyto!(c.Fscratch, coef_dest)
     apply_inplace!(c.F, c.Fscratch)
     c.Fscratch ./= c.eigenvaluematrix
     apply_inplace!(c.iF, c.Fscratch)
-    copy!(coef_dest, c.Fscratch)
-end
-
-# TODO find to do this without copying code (TensorCirculantOperator is no DerivedOperator?)
-function matrix!(op::TensorCirculantOperator, a)
-    coef_src  = zeros(src(op))
-    coef_dest = zeros(dest(op))
-    matrix_fill!(op, a, coef_src, coef_dest)
-end
-
-# TODO find to do this without copying code (TensorCirculantOperator is no DerivedOperator?)
-function unsafe_getindex(op::TensorCirculantOperator, i::Int, j::Int)
-  coef_src = zeros(src(op))
-	coef_dest = zeros(dest(op))
-	coef_src[j] = one(eltype(op))
-	apply!(op, coef_dest, coef_src)
-	coef_dest[i]
+    copyto!(coef_dest, c.Fscratch)
 end
