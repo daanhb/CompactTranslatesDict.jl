@@ -11,7 +11,7 @@ using BasisFunctions, CardinalBSplines, Domains
 if VERSION < v"0.7-"
     nothing
 else
-    using LinearAlgebra
+    using LinearAlgebra, FFTW
 end
 
 import Base: ==, getindex
