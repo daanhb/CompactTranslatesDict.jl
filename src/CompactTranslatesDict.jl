@@ -2,7 +2,7 @@ __precompile__()
 module CompactTranslatesDict
 
 include("SymbolicDifferentialOperators/SymbolicDifferentialOperators.jl")
-using .SymbolicDifferentialOperators: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator, AbstractDiffOperator
+using .SymbolicDifferentialOperators: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator, AbstractDiffOperator, ScaledDifferentialOperator
 using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, scalar, dimension_name
 
 using BasisFunctions, CardinalBSplines, Domains

@@ -15,7 +15,7 @@ grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ? PeriodicEquispacedGrid(le
 
 kernel_span(b::DiffPeriodicBSplineBasis) = interval(domaintype(b)(0), stepsize(b)*domaintype(b)(degree(b)+1))
 
-eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{K,T,D}, x) where {K,T,D} = (n = length(b); sqrt(T(n))*diff_evaluate_periodic_Bspline(Val{K}, Val{D}, n*x, n, T))::T
+eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{K,T,D}, x) where {K,T,D} = (n = length(b); sqrt(T(n))*n^D*diff_evaluate_periodic_Bspline(Val{K}, Val{D}, n*x, n, T))::T
 
 
 abstract type PeriodicBSplineBasis{K,T} <: DiffPeriodicBSplineBasis{K,T,0}
@@ -70,7 +70,7 @@ BSplineTranslatesBasis(n::Int, DEGREE::Int, ::Type{T} = Float64; scaled = true) 
     BSplineTranslatesBasis{DEGREE,T,true}(n) :
     BSplineTranslatesBasis{DEGREE,T,false}(n)
 
-eval_kernel(b::BSplineTranslatesBasis{K,T,true}, x) where {K,T} = (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
+# eval_kernel(b::BSplineTranslatesBasis{K,T,true}, x) where {K,T} = (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
 eval_kernel(b::BSplineTranslatesBasis{K,T,false}, x) where {K,T} = (n = length(b); evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
 
 scaled(b::BSplineTranslatesBasis{K,T,SCALED}) where {K,T,SCALED} = SCALED

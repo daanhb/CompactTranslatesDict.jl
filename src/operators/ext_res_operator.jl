@@ -54,9 +54,17 @@ unsafe_wrap_operator(src, dest, op::ExtResOperator{ELT}) where ELT =
 
 full_dict(d::Subdictionary) = superdict(d)
 full_dict(d::Dictionary) = d
+full_dict(d::GridBasis) = gridbasis(full_grid(grid(d)), coeftype(d))
+full_grid(a::AbstractGrid) = a
+full_grid(a::IndexSubGrid) = supergrid(a)
 
+is_fastly_indexable(::MatrixOperator) = true
+
+fast_getindex(m::MatrixOperator, i::Int, j::Int) = getindex(BasisFunctions.object(m),i,j)
 
 is_fastly_indexable(::ExtResOperator) = true
+
+is_fastly_indexable(w::WrappedOperator) = is_fastly_indexable(w.op)
 
 is_fastly_indexable(a...) = false
 
