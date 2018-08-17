@@ -58,6 +58,8 @@ full_dict(d::GridBasis) = gridbasis(full_grid(grid(d)), coeftype(d))
 full_grid(a::AbstractGrid) = a
 full_grid(a::IndexSubGrid) = supergrid(a)
 
+adjoint(M::ExtResOperator{ELT}) where ELT = ExtResOperator{ELT}(full_dict(dest(M)), full_dict(src(M)), destindices(M), srcindices(M), M.op')
+
 is_fastly_indexable(::MatrixOperator) = true
 
 fast_getindex(m::MatrixOperator, i::Int, j::Int) = getindex(BasisFunctions.object(m),i,j)

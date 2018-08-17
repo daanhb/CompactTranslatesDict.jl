@@ -70,7 +70,7 @@ BSplineTranslatesBasis(n::Int, DEGREE::Int, ::Type{T} = Float64; scaled = true) 
     BSplineTranslatesBasis{DEGREE,T,true}(n) :
     BSplineTranslatesBasis{DEGREE,T,false}(n)
 
-# eval_kernel(b::BSplineTranslatesBasis{K,T,true}, x) where {K,T} = (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
+eval_kernel(b::BSplineTranslatesBasis{K,T,true}, x) where {K,T} = (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
 eval_kernel(b::BSplineTranslatesBasis{K,T,false}, x) where {K,T} = (n = length(b); evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
 
 scaled(b::BSplineTranslatesBasis{K,T,SCALED}) where {K,T,SCALED} = SCALED

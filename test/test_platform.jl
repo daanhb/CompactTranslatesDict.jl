@@ -27,8 +27,8 @@ function test_bspline_platform(T)
     end
 
     #  ND
-    init = [3,4]
-    degree = [1,3]
+    init = (3,4)
+    degree = (1,3)
     T = Float64
     oversampling = 2
     for oversampling in [1,2,4], i in [1,2]
@@ -62,8 +62,8 @@ function test_bspline_platform(T)
         @test S*f≈broadcast(f,g)
     end
 
-    init = [3,3]
-    degree = [1,3]
+    init = (3,3)
+    degree = (1,3)
     oversampling = 2
     center = @SVector [.5,.5]
     domain  = disk(.3,center)

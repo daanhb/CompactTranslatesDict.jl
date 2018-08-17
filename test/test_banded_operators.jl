@@ -57,7 +57,7 @@ end
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
-
+    @test matrix(C')≈matrix(C)'
 
     M = evaluation_operator(s⊗d,oversampling=2)
     i = [CartesianIndex(1,1), CartesianIndex(2,3), CartesianIndex(3,1)]
@@ -78,6 +78,7 @@ end
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
+    @test matrix(C')≈matrix(C)'
 end
 
 
