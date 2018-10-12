@@ -13,7 +13,7 @@ struct ExtResOperator{ELT} <: BasisFunctions.DictionaryOperator{ELT}
     dest::Dictionary
     srcextension    ::IndexExtensionOperator
     destrestriction ::IndexRestrictionOperator
-    op::DictionaryOperator{ELT}
+    op::DictionaryOperator
     RopE::CompositeOperator
     function ExtResOperator{ELT}(src, dest, srcindices, destindices, op) where ELT
         @assert !isa(src, Subdictionary)
@@ -30,7 +30,7 @@ struct ExtResOperator{ELT} <: BasisFunctions.DictionaryOperator{ELT}
         end
         E = IndexExtensionOperator(res_src, src, srcindices)
         R = IndexRestrictionOperator(dest, res_dest, destindices)
-        new(res_src, res_dest, E, R, op, R*op*E)
+        new{ELT}(res_src, res_dest, E, R, op, R*op*E)
     end
 end
 
@@ -158,6 +158,9 @@ getindex(M::ExtResOperator, i::Int, j::Int) =
 matrix(M::ExtResOperator) =
     fast_matrix(M, M.op, srcindices(M), destindices(M))
 
+matrix!(M::ExtResOperator, m::Array) =
+    fast_matrix!(m, M.op, srcindices(M), destindices(M))
+
 _zeros(M::ExtResOperator) =
     _zeros(eltype(M), size(M), destindices(M), srcindices(M))
 
@@ -176,9 +179,29 @@ fast_matrix(M::ExtResOperator, T::DictionaryOperator, srcindices::My1DIndexType,
 fast_matrix(M::ExtResOperator, T::NdOperator, srcindices::MyNDIndexType, destindices::MyNDIndexType) =
     fast_matrix!(_zeros(M), T, srcindices, destindices)
 
-function fast_matrix!(m::Matrix, T::NdOperator, srcindices, destindices)
+function fast_matrix!(m::Matrix, T, srcindices, destindices)
     for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
         m[i,j] = fast_getindex(T, k, l)
+    end
+    m
+end
+
+fast_matrix!(m::Matrix, T::NdOperator, srcindices, destindices) =
+    fast_matrix!(m, elements(T), T, srcindices, destindices)
+
+@noinline function fast_matrix!(m::Matrix, ops, T::TensorProductOperator, srcindices, destindices)
+    for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
+        m[i,j] = fast_getindex(ops, T, k, l)
+    end
+    m
+end
+
+fast_matrix!(m::Matrix, Sops, S::OperatorSum, srcindices, destindices) =
+    fast_matrix!(m, map(elements, Sops), Sops, coefficients(S), S, srcindices, destindices)
+
+@noinline function fast_matrix!(m::Matrix, TSops, Sops, coefficients, S::OperatorSum, srcindices, destindices)
+    for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
+        m[i,j] = fast_getindex(TSops, Sops, coefficients, S, k, l)
     end
     m
 end
@@ -197,10 +220,7 @@ function fast_matrix!(m::Vector, T::NdOperator, srcindices::Union{CartesianIndex
     m
 end
 
-fast_getindex(M::TensorProductOperator, i::CartesianIndex, j::CartesianIndex) =
-    tensor_fast_getindex(elements(M), i, j)
-
-@generated function tensor_fast_getindex(ops, i::CartesianIndex{N}, j::CartesianIndex{N}) where {N}
+@generated function fast_getindex(ops, T::TensorProductOperator, i::CartesianIndex{N}, j::CartesianIndex{N}) where {N}
     l = [:(fast_getindex(ops[$i], i[$i], j[$i])) for i in 1:N]
     # println("compile fast_getindex for tensor dimension $N")
     s = ""
@@ -211,11 +231,8 @@ fast_getindex(M::TensorProductOperator, i::CartesianIndex, j::CartesianIndex) =
     return Meta.parse(s)
 end
 
-fast_getindex(M::OperatorSum, i::CartesianIndex, j::CartesianIndex) =
-    sum_fast_getindex(elements(M), coefficients(M), i, j)
-
-@generated function sum_fast_getindex(ops::Tuple{Vararg{DictionaryOperator,M}}, coefficients, i::CartesianIndex{N}, j::CartesianIndex{N}) where {N,M}
-    l = [:(coefficients[$i]*fast_getindex(ops[$i], i, j)) for i in 1:M]
+@generated function fast_getindex(TSops, Sops::Tuple{Vararg{DictionaryOperator,M}}, coefficients, op::OperatorSum, i::CartesianIndex{N}, j::CartesianIndex{N}) where {N,M}
+    l = [:(coefficients[$i]*fast_getindex(TSops[$i], Sops[$i], i, j)) for i in 1:M]
     s = ""
     for i in 1:M-1
         s *= string(l[i])*"+"

@@ -11,12 +11,17 @@ struct IndexableHorizontalBandedOperator{ELT} <: BasisFunctions.DictionaryOperat
     array::Vector{ELT}
     step::Int
     offset::Int
+    M::Int
+    N::Int
     function IndexableHorizontalBandedOperator{ELT}(src::Dictionary, dest::Dictionary, array::Vector{ELT}, step::Int=1, offset::Int=0) where ELT
         @assert length(array) <= length(src)
         @assert step <= length(src) # apply! only works if step is smaller then L
-        new{ELT}(src, dest, array, step, offset)
+        new{ELT}(src, dest, array, step, offset, length(dest), length(src))
     end
 end
+
+Base.size(op::IndexableHorizontalBandedOperator) = (op.M, op.N)
+Base.size(op::IndexableHorizontalBandedOperator, i::Int) = (i==1) ? op.M : op.N
 
 IndexableHorizontalBandedOperator(src::Dictionary, dest::Dictionary, array::Vector{ELT}, step::Int=1, offset::Int=0) where ELT =
     IndexableHorizontalBandedOperator{ELT}(src, dest, array, step, offset)
@@ -65,12 +70,17 @@ struct IndexableVerticalBandedOperator{ELT} <: BasisFunctions.DictionaryOperator
     array::Vector{ELT}
     step::Int
     offset::Int
+    M::Int
+    N::Int
     function IndexableVerticalBandedOperator{ELT}(src::Dictionary, dest::Dictionary, array::Vector{ELT}, step::Int, offset::Int) where ELT
         @assert length(array) <= length(dest)
         @assert step <= length(dest) # apply! only works if step is smaller then L
-        new{ELT}(src, dest, array, step, offset)
+        new{ELT}(src, dest, array, step, offset, length(dest), length(src))
     end
 end
+
+Base.size(op::IndexableVerticalBandedOperator) = (op.M, op.N)
+Base.size(op::IndexableVerticalBandedOperator, i::Int) = (i==1) ? op.M : op.N
 
 IndexableVerticalBandedOperator(src::Dictionary, dest::Dictionary, array::Vector{ELT}, step::Int=1, offset::Int=0) where ELT =
     IndexableVerticalBandedOperator{ELT}(src, dest, array, step, offset)
