@@ -132,20 +132,20 @@ getindex(M::NdOperator, i::MyNDIndexType, j::Colon) =
     ExtResOperator(i, M)
 
 function getindex(M::NdOperator, i::My1DIndexType, j::My1DIndexType)
-    warn("Deprecated: partial linear indexing of multidimensional object")
+    @warn("Deprecated: partial linear indexing of multidimensional object")
     k = native_index.(dest(M), i)
     l = native_index.(src(M), j)
     ExtResOperator(k, M, l)
 end
 
 function getindex(M::NdOperator, i::Colon, j::My1DIndexType)
-    warn("Deprecated: partial linear indexing of multidimensional object")
+    @warn("Deprecated: partial linear indexing of multidimensional object")
     l = native_index.(src(M), j)
     ExtResOperator(M, l)
 end
 
 function getindex(M::NdOperator, i::My1DIndexType, j::Colon)
-    warn("Deprecated: partial linear indexing of multidimensional object")
+    @warn("Deprecated: partial linear indexing of multidimensional object")
     k = native_index.(dest(M), i)
     ExtResOperator(k, M)
 end

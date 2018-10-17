@@ -115,7 +115,7 @@ function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, gri
         a, offset = _get_array_offset(firstcolumn)
         IndexableVerticalBandedOperator(s, dgs, a, sampling_factor, offset-1)
     else
-        warn("slow evaluation operator")
+        @warn("slow evaluation operator")
         default_evaluation_operator(s, dgs; options...)
     end
 end

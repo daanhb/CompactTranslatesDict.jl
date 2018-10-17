@@ -9,6 +9,9 @@ using BasisFunctions, CardinalBSplines, Domains
 
 if VERSION < v"0.7-"
     using Compat
+    macro warn(a...)
+        return :(warn($a...))
+    end
 else
     using LinearAlgebra, FFTW
 end
