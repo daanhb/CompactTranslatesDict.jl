@@ -58,13 +58,17 @@ end
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]
     @test matrix(C')≈matrix(C)'
+    m = zeros(size(C))
+    BasisFunctions.matrix!(C, m)
+    @test (@timed BasisFunctions.matrix!(C, m))[3] < 250 # 64 in julia 0.6.4
+
 
     M = evaluation_operator(s⊗d,oversampling=2)
     i = [CartesianIndex(1,1), CartesianIndex(2,3), CartesianIndex(3,1)]
     j = [CartesianIndex(1,1), CartesianIndex(2,3), CartesianIndex(3,1), CartesianIndex(5,6), CartesianIndex(1,10)]
 
-    k = linear_index.(dest(M), i)
-    l = linear_index.(src(M), j)
+    k = linear_index.(Ref(dest(M)), i)
+    l = linear_index.(Ref(src(M)), j)
 
     C = CompactTranslatesDict.ExtResOperator(i, M, j)
     c = matrix(C)
@@ -74,7 +78,7 @@ end
     @test matrix(M[i, j]) == matrix(M)[k,l]
     @test matrix(M[:,j]) == matrix(M)[:,l]
     @test matrix(M[i,:]) == matrix(M)[k,:]
-    @test c == [C[i,j] for i in 1:size(C, 1), j in 1:size(C,2)]
+    # @test c == [C[i,j] for i in 1:size(C, 1), j in 1:size(C,2)] # One index is no longer supported
     @test matrix(C[1:2,1:2]) == c[1:2,1:2]
     @test matrix(C[:,1:2])==c[:,1:2]
     @test matrix(C[1:2,:])==c[1:2,:]

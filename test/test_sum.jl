@@ -1,6 +1,10 @@
 
-
-using CompactTranslatesDict, Base.Test, Domains, BasisFunctions
+using CompactTranslatesDict, Domains, BasisFunctions
+if VERSION<v"0.7-"
+    using Base.Test
+else
+    using Test
+end
 
 @testset "$(rpad("Summation of tensorproduct",80))" begin
     B = BSplineTranslatesBasis(10,2)⊗DiffBSplineTranslatesBasis(10,3,1)

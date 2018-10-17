@@ -54,9 +54,9 @@ end
 function (DG::DualDiffBSplineGenerator)(param)
     B = DG.primal_generator(param)
     DG = DiscreteDualGram(B, oversampling=DG.oversampling)
-    warn("diff_bspline_platform.jl ln 57")
-    DG.eigenvaluematrix.diagonal[ isnan.(DG.eigenvaluematrix.diagonal)] = 0
-    DG.superoperator.operators[5].diagonal[ isnan.(DG.superoperator.operators[5].diagonal) ] = 0
+    # warn("diff_bspline_platform.jl ln 57")
+    # DG.eigenvaluematrix.diagonal[ isnan.(DG.eigenvaluematrix.diagonal)] = 0
+    # DG.superoperator.operators[5].diagonal[ isnan.(DG.superoperator.operators[5].diagonal) ] = 0
     OperatedDict(DG)
 end
 
