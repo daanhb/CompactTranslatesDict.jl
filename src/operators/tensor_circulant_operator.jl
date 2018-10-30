@@ -34,7 +34,7 @@ function TensorCirculantOperator(::Type{T}, op_src::Dictionary, op_dest::Diction
     #realify a circulant operator if src and dest are real (one should imply the other).
     if isreal(op_src) && isreal(op_dest)
         imag_norm = norm(imag(fft(opD)))
-        imag_norm > real_circulant_tol && @warn("realified tensor circulant operator, lost an accuracy of $(imag_norm)")
+        imag_norm > real_circulant_tol && (@warn "realified tensor circulant operator, lost an accuracy of $(imag_norm)")
         r_S, r_D, r_A = op_eltypes(op_src, op_dest, real(T))
         r_src = promote_coeftype(op_src, r_S)
         r_dest = promote_coeftype(op_dest, r_D)

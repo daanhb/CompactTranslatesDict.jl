@@ -179,41 +179,43 @@ fast_matrix(M::ExtResOperator, T::DictionaryOperator, srcindices::My1DIndexType,
 fast_matrix(M::ExtResOperator, T::NdOperator, srcindices::MyNDIndexType, destindices::MyNDIndexType) =
     fast_matrix!(_zeros(M), T, srcindices, destindices)
 
-function fast_matrix!(m::Matrix, T, srcindices, destindices)
+function fast_matrix!(m::AbstractMatrix, T, srcindices, destindices)
     for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
         m[i,j] = fast_getindex(T, k, l)
     end
     m
 end
 
-fast_matrix!(m::Matrix, T::NdOperator, srcindices, destindices) =
+fast_getindex(T, k::CartesianIndex{1}, l::CartesianIndex{1}) = fast_getindex(T, k[1], l[1])
+
+fast_matrix!(m::AbstractMatrix, T::NdOperator, srcindices, destindices) =
     fast_matrix!(m, elements(T), T, srcindices, destindices)
 
-@noinline function fast_matrix!(m::Matrix, ops, T::TensorProductOperator, srcindices, destindices)
+@noinline function fast_matrix!(m::AbstractMatrix, ops, T::TensorProductOperator, srcindices, destindices)
     for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
         m[i,j] = fast_getindex(ops, T, k, l)
     end
     m
 end
 
-fast_matrix!(m::Matrix, Sops, S::OperatorSum, srcindices, destindices) =
+fast_matrix!(m::AbstractMatrix, Sops, S::OperatorSum, srcindices, destindices) =
     fast_matrix!(m, map(elements, Sops), Sops, coefficients(S), S, srcindices, destindices)
 
-@noinline function fast_matrix!(m::Matrix, TSops, Sops, coefficients, S::OperatorSum, srcindices, destindices)
+@noinline function fast_matrix!(m::AbstractMatrix, TSops, Sops, coefficients, S::OperatorSum, srcindices, destindices)
     for (i,k) in enumerate(destindices), (j, l) in enumerate(srcindices)
         m[i,j] = fast_getindex(TSops, Sops, coefficients, S, k, l)
     end
     m
 end
 
-function fast_matrix!(m::Vector, T::NdOperator, srcindices, destindices::Union{CartesianIndex,Int})
+function fast_matrix!(m::AbstractVector, T::NdOperator, srcindices, destindices::Union{CartesianIndex,Int})
     for (i,l) in enumerate(srcindices)
         m[i] = fast_getindex(T, destindices, l)
     end
     m
 end
 
-function fast_matrix!(m::Vector, T::NdOperator, srcindices::Union{CartesianIndex,Int}, destindices)
+function fast_matrix!(m::AbstractVector, T::NdOperator, srcindices::Union{CartesianIndex,Int}, destindices)
     for (i,k) in enumerate(destindices)
         m[i] = fast_getindex(T, k, srcindices)
     end
