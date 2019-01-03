@@ -1,5 +1,4 @@
 using CompactTranslatesDict
-
 types = [Float64, BigFloat]
 
 include("test_sum.jl")

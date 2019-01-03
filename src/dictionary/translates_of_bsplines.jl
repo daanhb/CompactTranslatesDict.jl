@@ -13,7 +13,7 @@ compatible_grid(b::DiffPeriodicBSplineBasis, grid::PeriodicEquispacedGrid) = iso
 
 grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ? PeriodicEquispacedGrid(length(b), support(b)) : MidpointEquispacedGrid(length(b), support(b))
 
-kernel_span(b::DiffPeriodicBSplineBasis) = interval(domaintype(b)(0), stepsize(b)*domaintype(b)(degree(b)+1))
+kernel_span(b::DiffPeriodicBSplineBasis) = Interval(domaintype(b)(0), stepsize(b)*domaintype(b)(degree(b)+1))
 
 eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{K,T,D}, x) where {K,T,D} = (n = length(b); sqrt(T(n))*n^D*diff_evaluate_periodic_Bspline(Val{K}, Val{D}, n*x, n, T))::T
 
@@ -66,6 +66,11 @@ struct BSplineTranslatesBasis{K,T,SCALED} <: PeriodicBSplineBasis{K,T}
     n               :: Int
 end
 
+Base.length(b::BSplineTranslatesBasis) = b.n
+Base.size(b::BSplineTranslatesBasis) = (length(b),)
+
+Base.similar(d::BSplineTranslatesBasis, ::Type{T}, n::Int) where T = BSplineTranslatesBasis(n, degree(d), T)
+
 BSplineTranslatesBasis(n::Int, DEGREE::Int, ::Type{T} = Float64; scaled = true) where {T} = (scaled) ?
     BSplineTranslatesBasis{DEGREE,T,true}(n) :
     BSplineTranslatesBasis{DEGREE,T,false}(n)
@@ -84,7 +89,7 @@ instantiate(::Type{BSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = BSpli
 resize(b::BSplineTranslatesBasis{K,T}, n::Int) where {K,T} = BSplineTranslatesBasis(n, degree(b), T)
 
 function _binomial_circulant(s::BSplineTranslatesBasis{K,T,SCALED}) where {K,T,SCALED}
-    A = coeftype(s)
+    A = coefficienttype(s)
     c = zeros(A, length(s))
     for k in 1:K+2
         c[k] = binomial(K+1, k-1)
@@ -98,7 +103,7 @@ end
 
 function primalgramcolumnelement(s::BSplineTranslatesBasis{K,T,SCALED}, i::Int; options...) where {K,T,SCALED}
     r = 0
-    A = coeftype(s)
+    A = coefficienttype(s)
     # If size of functionspace is too small there is overlap and we can not use the
     # function squared_spline_integral which assumes no overlap.
     # Use integration as long as there is no more efficient way is implemented.
@@ -127,6 +132,11 @@ end
 struct DiffBSplineTranslatesBasis{K,T,D} <: DiffPeriodicBSplineBasis{K,T,D}
     n               :: Int
 end
+
+Base.length(b::DiffBSplineTranslatesBasis) = b.n
+Base.size(b::DiffBSplineTranslatesBasis) = (length(b),)
+
+Base.similar(d::DiffBSplineTranslatesBasis, ::Type{T}, n::Int) where T = DiffBSplineTranslatesBasis(N, degree(d), Bdiff(d), T)
 
 DiffBSplineTranslatesBasis(n::Int, DEGREE::Int, D::Int, ::Type{T} = Float64) where {T} =
     DiffBSplineTranslatesBasis{DEGREE,T,D}(n)

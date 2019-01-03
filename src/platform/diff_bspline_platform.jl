@@ -77,7 +77,7 @@ function bspline_platform(::Type{T}, init::NTuple{N,Int}, degree::NTuple{N,Int},
     sampler = diff_bspline_sampler(T, primal, oversampling)
     dual_sampler = n->(1/length(dual(n)))*sampler(n)
 	params = diff_bspline_param(init)
-	BasisFunctions.GenericPlatform(primal = primal, dual = dual, sampler = sampler, dual_sampler=dual_sampler,
+	GenericPlatform(primal = primal, dual = dual, sampler = sampler, dual_sampler=dual_sampler,
 		params = params, name = "B-Spline translate on $d")
 end
 
@@ -87,6 +87,6 @@ function bspline_platform(::Type{T}, init::Int, degree::Int, oversampling::Int, 
     sampler = diff_bspline_sampler(T, primal, oversampling)
     dual_sampler = n->(1/length(dual(n)))*sampler(n)
 	params = diff_bspline_param(init)
-	BasisFunctions.GenericPlatform(primal = primal, dual = dual, sampler = sampler, dual_sampler=dual_sampler,
+	GenericPlatform(primal = primal, dual = dual, sampler = sampler, dual_sampler=dual_sampler,
 		params = params, name = "B-Spline translate on $d")
 end

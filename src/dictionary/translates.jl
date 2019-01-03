@@ -48,7 +48,7 @@ function periodize_interval(indomain::AbstractInterval, outdomain::AbstractInter
     if supremum(indomain) ∈ outdomain
         indomain
     else
-        (interval(infimum(outdomain), supremum(indomain)-per))∪(interval(infimum(indomain), supremum(outdomain)))
+        UnionDomain((Interval(infimum(outdomain), supremum(indomain)-per)),(Interval(infimum(indomain), supremum(outdomain))))
     end
 end
 
@@ -103,7 +103,7 @@ transform_from_grid(src, dest::CompactTranslationDict, grid; options...) =
 
 function transform_to_grid(src::CompactTranslationDict, dest, grid; options...)
     @assert compatible_grid(src, grid)
-    CirculantOperator(src, dest, sample(grid, x->eval_kernel(s, x)); options...)
+    CirculantOperator(src, dest, sample(grid, x->eval_kernel(src, x)); options...)
 end
 
 function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, grid::AbstractEquispacedGrid; TYPE=IndexableVerticalBandedOperator, options...)
@@ -147,7 +147,7 @@ end
 # All inner products between elements of CompactTranslationDict are known by the first column of the (circulant) gram matrix.
 function primalgramcolumn(s::CompactTranslationDict; options...)
     n = length(s)
-    result = zeros(coeftype(s), n)
+    result = zeros(coefficienttype(s), n)
     for i in 1:length(result)
         result[i] = primalgramcolumnelement(s, i; options...)
     end

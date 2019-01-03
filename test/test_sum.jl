@@ -1,5 +1,5 @@
 
-using CompactTranslatesDict, Domains, BasisFunctions
+using CompactTranslatesDict, DomainSets, BasisFunctions
 if VERSION<v"0.7-"
     using Base.Test
 else

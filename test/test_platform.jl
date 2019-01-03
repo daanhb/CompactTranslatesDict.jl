@@ -1,5 +1,5 @@
 
-using CompactTranslatesDict, CompactTranslatesDict.SymbolicDifferentialOperators, BasisFunctions, StaticArrays, Domains
+using CompactTranslatesDict, CompactTranslatesDict.SymbolicDifferentialOperators, BasisFunctions, StaticArrays, DomainSets
 types = [Float64, BigFloat]
 (VERSION<v"0.7-") ? using Base.Test : using Test
 

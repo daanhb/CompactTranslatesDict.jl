@@ -27,7 +27,23 @@ CompactTranslationDictSum(dicts::Tuple{Vararg{CompactTranslatesTensorProductDict
 
 elements(S::CompactTranslationDictSum) = S.dicts
 
+element(S::CompactTranslationDictSum, i) = S.dicts[i]
+
 coefficients(S::CompactTranslationDictSum) = S.coefficients
+
+function BasisFunctions.promote_coefficienttype(S::CompactTranslationDictSum, ::Type{T}) where T
+    new_dicts = map(promote_coefficienttype, elements(S))
+    new_coef_type = promote(eltype((coefficients(S))), T)
+    new_coefs = zeros(T, size(coefficients((S))))
+    new_coefs .= coefficients((S))
+    CompactTranslatesDict(new_dicts, new_coefs)
+end
+
+# function similar_dictionary(s::CompactTranslationDictSum, s2::Dictionary)
+#     @show s
+#     @show s2
+#     CompactTranslationDictSum(s2)
+# end
 
 unsafe_eval_element(dict::CompactTranslationDictSum, i::ProductIndex, x) =
     sum(c*unsafe_eval_element(e, i, x) for (c,e) in zip(coefficients(dict),elements(dict)))

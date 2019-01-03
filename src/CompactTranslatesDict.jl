@@ -5,7 +5,9 @@ include("SymbolicDifferentialOperators/SymbolicDifferentialOperators.jl")
 using .SymbolicDifferentialOperators: SumDifferentialOperator, ProductDifferentialOperator, PartialDifferentialOperator,IdentityDifferentialOperator, AbstractDiffOperator, ScaledDifferentialOperator
 using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, scalar, dimension_name
 
-using BasisFunctions, CardinalBSplines, Domains
+using BasisFunctions, CardinalBSplines, DomainSets
+using FrameFun: GenericPlatform, DoublingSequence, MultiplySequence, TensorSequence, extension_frame_platform, tensor_generator
+export extension_frame_platform
 
 if VERSION < v"0.7-"
     using Compat
@@ -16,7 +18,7 @@ end
 
 import Base: ==, getindex
 
-using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coeftype, ProductGrid
+using BasisFunctions: ShiftedIndex, ShiftedIndexList, eigenvalues, product_domaintype, promote_coefficienttype, ProductGrid
 using BasisFunctions: forward_fourier_operator, op_eltypes, DictionaryOperator, ×
 import BasisFunctions: length, is_biorthogonal, is_basis, name, ordering, oversampled_grid
 import BasisFunctions: has_unitary_transform, support, has_grid, grid, period

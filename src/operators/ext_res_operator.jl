@@ -54,7 +54,7 @@ unsafe_wrap_operator(src, dest, op::ExtResOperator{ELT}) where ELT =
 
 full_dict(d::Subdictionary) = superdict(d)
 full_dict(d::Dictionary) = d
-full_dict(d::GridBasis) = gridbasis(full_grid(grid(d)), coeftype(d))
+full_dict(d::GridBasis) = gridbasis(full_grid(grid(d)), coefficienttype(d))
 full_grid(a::AbstractGrid) = a
 full_grid(a::IndexSubGrid) = supergrid(a)
 

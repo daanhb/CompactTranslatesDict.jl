@@ -13,13 +13,13 @@ struct OperatorSum{T,S,N} <: DictionaryOperator{T}
         if VERSION < v"0.7-"
             @assert reduce(&, true, size(src(ops[1]))==size(src(op)) for op in ops)
             @assert reduce(&, true, size(dest(ops[1]))==size(dest(op)) for op in ops)
-            @assert reduce(&, true, T==coeftype(dest(op)) for op in ops)
-            @assert reduce(&, true, T==coeftype(dest(op)) for op in ops)
+            @assert reduce(&, true, T==coefficienttype(dest(op)) for op in ops)
+            @assert reduce(&, true, T==coefficienttype(dest(op)) for op in ops)
         else 
             @assert reduce(&, size(src(ops[1]))==size(src(op)) for op in ops; init=true)
             @assert reduce(&, size(dest(ops[1]))==size(dest(op)) for op in ops; init=true)
-            @assert reduce(&, T==coeftype(dest(op)) for op in ops; init=true)
-            @assert reduce(&, T==coeftype(dest(op)) for op in ops; init=true)
+            @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
+            @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
         end
         @assert length(ops) == length(coefficients)
         new{T,S,N}(s, d, ops, coefficients, scratch)
