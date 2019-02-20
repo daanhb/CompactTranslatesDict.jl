@@ -1,51 +1,10 @@
-using BasisFunctions, BasisFunctions.Test
-using CompactTranslatesDict
-using CompactTranslatesDict.SymbolicDifferentialOperators
-
-if VERSION < v"0.7-"
-    using Base.Test
-else
-    using Test
-end
-@testset "$(rpad("test banded operators",80))" begin
-    ELT = Float64
-    a = [ELT(1),ELT(2),ELT(3)]
-    H = IndexableHorizontalBandedOperator(FourierBasis{ELT}(6,0,1), FourierBasis{ELT}(3,0,1),a,3,2)
-    test_generic_operator_interface(H, ELT)
-    h = matrix(H)
-    e = zeros(ELT,6,1)
-    for i in 1:3
-        e .= 0
-        I = (2+(i-1)*3) .+ (1:3)
-        for (j,k) in enumerate(mod.(I .- 1,6) .+ 1)
-            e[k] = a[j]
-        end
-        @test e ≈ h[i,:]
-    end
-    matrix(H')≈matrix(H)'
-
-    V = IndexableVerticalBandedOperator(FourierBasis{ELT}(3,0,1), FourierBasis{ELT}(6,0,1),a,3,2)
-    test_generic_operator_interface(V, ELT)
-    v = matrix(V)
-    e = zeros(ELT,6,1)
-    for i in 1:3
-        e .= 0
-        I = (2+(i-1)*3) .+ (1:3)
-        for (j,k) in enumerate(mod.(I .- 1,6) .+ 1)
-            e[k] = a[j]
-        end
-        @test e ≈ v[:,i]
-    end
-
-    matrix(V')≈matrix(V)'
-end
-
+using BasisFunctions, BasisFunctions.Test, CompactTranslatesDict, Test
 
 @testset "$(rpad("test indexable operators",80))" begin
     d = BSplineTranslatesBasis(10,3)
     s = BSplineTranslatesBasis(20,3)
 
-    M = IndexableVerticalBandedOperator(d, s, [1,2], 2, 1)
+    M = VerticalBandedOperator(d, s, [1,2], 2, 1)
     C = CompactTranslatesDict.ExtResOperator(1:3, M, 1:5)
     c = matrix(C)
 

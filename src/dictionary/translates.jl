@@ -18,9 +18,7 @@ function kernel_span(::CompactTranslationDict) end
 
 length(dict::CompactTranslationDict) = dict.n
 
-is_biorthogonal(::CompactTranslationDict) = true
-
-is_basis(::CompactTranslationDict) = true
+isbasis(::CompactTranslationDict) = true
 
 name(b::CompactTranslationDict) = "Dictionary of equispaced translates of a kernel function"
 name(::Type{B}) where {B<:CompactTranslationDict}= "Dictionary of equispaced translates of a kernel function"
@@ -73,50 +71,53 @@ function eval_expansion(b::CompactTranslationDict, coef, x)
     z
 end
 
-has_grid(::CompactTranslationDict) = true
+hasinterpolationgrid(::CompactTranslationDict) = true
 
-grid(dict::CompactTranslationDict) = PeriodicEquispacedGrid(length(dict), support(dict))
+interpolation_grid(dict::CompactTranslationDict) = PeriodicEquispacedGrid(length(dict), support(dict))
+function oversampling_grid(dict::CompactTranslationDict, L)
+    L = ceil(Int, L/length(dict))*length(dict)
+    interpolation_grid(resize(dict, L))
+end
 
-has_grid_transform(b::CompactTranslationDict, gb, grid::AbstractEquispacedGrid) =
+hasgrid_transform(b::CompactTranslationDict, gb, grid::AbstractEquispacedGrid) =
     compatible_grid(b, grid)
 
-compatible_grid(b::CompactTranslationDict, grid::AbstractEquispacedGrid) =
-    periodic_compatible_grid(b, grid)
+iscompatible(b::CompactTranslationDict, grid::AbstractEquispacedGrid) =
+    isperiodic_compatible_grid(b, grid)
 
 isdyadic(n::Integer) = (n == 2^(ndyadicscales(n)))
 ndyadicscales(n::Integer) = round(Int, log2(n))
-function periodic_compatible_grid(b::Dictionary, grid::AbstractEquispacedGrid)
+isperiodic_compatible_grid(b::Dictionary, grid::AbstractGrid) = false
+function isperiodic_compatible_grid(b::CompactTranslationDict, grid::AbstractEquispacedGrid)
     l1 = length(b)
     l2 = length(grid)
     l1 > l2 && ((l2,l1) = (l1, l2))
     n = l2/l1
     nInt = round(Int, n)
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && isdyadic(nInt) && (n≈nInt)
+    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (n≈nInt)
 end
 
 approx_length(b::CompactTranslationDict, n::Int) = ceil(Int,n/length(b))*length(b)
-
-native_nodes(b::CompactTranslationDict) = [k*stepsize(b) for k in 0:length(b)]
 
 transform_from_grid(src, dest::CompactTranslationDict, grid; options...) =
     inv(transform_to_grid(dest, src, grid; options...))
 
 function transform_to_grid(src::CompactTranslationDict, dest, grid; options...)
-    @assert compatible_grid(src, grid)
+    @assert iscompatible(src, grid)
     CirculantOperator(src, dest, sample(grid, x->eval_kernel(src, x)); options...)
 end
 
-function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, grid::AbstractEquispacedGrid; TYPE=IndexableVerticalBandedOperator, options...)
+function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, grid::AbstractEquispacedGrid; T=op_eltype(s, dgs), TYPE=VerticalBandedOperator, warnslow = BasisFunctions.BF_WARNSLOW, options...)
     lg = length(grid)
     ls = length(s)
     sampling_factor, rem = divrem(lg, ls)
     if rem == 0
         firstcolumn = sample(grid, x->eval_kernel(s, x))
         a, offset = _get_array_offset(firstcolumn)
-        IndexableVerticalBandedOperator(s, dgs, a, sampling_factor, offset-1)
+        BasisFunctions.VerticalBandedOperator(s, dgs, a, sampling_factor, offset-1; T=T)
     else
-        @warn("slow evaluation operator")
-        default_evaluation_operator(s, dgs; options...)
+        warnslow && (@warn("slow evaluation operator"))
+        dense_evaluation_operator(s, dgs; options...)
     end
 end
 
@@ -124,9 +125,11 @@ function _get_array_offset(a)
     b = a.!=0
     f = findfirst(b)
     (f==nothing) && (f=0)
+
     if f==1
         if b[end]
-            f = findlast(.!b)+1
+            f = findlast(.!b)
+            (f == nothing) ? (return (a, 1)) : f += 1
             L = sum(b)
             vcat(a[f:end],a[1:L-length(a)+f]), f
         else
@@ -137,24 +140,55 @@ function _get_array_offset(a)
     end
 end
 
-Gram(s::CompactTranslationDict; options...) = CirculantOperator(s, s, primalgramcolumn(s; options...); options...)
+hasmeasure(dict::CompactTranslationDict) = true
+measure(b::CompactTranslationDict{T}) where T = FourierMeasure{T}()
 
-function UnNormalizedGram(s::CompactTranslationDict, oversampling = 1)
-    grid = BasisFunctions.oversampled_grid(s, oversampling)
-    CirculantOperator(evaluation_operator(s, grid)'*evaluation_operator(s, grid))
-end
+gramoperator(dict::CompactTranslationDict, measure::FourierMeasure; options...) =
+    _translatescirculantoperator(dict, measure)
 
-# All inner products between elements of CompactTranslationDict are known by the first column of the (circulant) gram matrix.
-function primalgramcolumn(s::CompactTranslationDict; options...)
-    n = length(s)
-    result = zeros(coefficienttype(s), n)
-    for i in 1:length(result)
-        result[i] = primalgramcolumnelement(s, i; options...)
+function gramoperator(dict::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
+    if isperiodic_compatible_grid(dict, grid(measure))
+        _translatescirculantoperator(dict, measure; options...)
+    else
+        BasisFunctions.default_gramoperator(dict, measure; options...)
     end
-    result
 end
 
-primalgramcolumnelement(s::CompactTranslationDict, i::Int; options...) =
-    defaultprimalgramcolumnelement(s, i; options...)
+_translatescirculantoperator(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...) = 
+	CirculantOperator(firstgramcolumn(dict, measure; T=T, options...), dict, dict; T=T)
 
-defaultprimalgramcolumnelement(s::Dictionary1d, i::Int; options...)  = dot(s, 1, i; options...)
+function firstgramcolumn(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...)
+    firstcolumn = zeros(T, length(dict))
+    for (index,i) in enumerate(ordering(dict))
+        firstcolumn[index] = innerproduct(dict, i, dict, ordering(dict)[1], measure; options...)
+    end
+    firstcolumn
+end
+
+
+
+#
+# function gramoperator(dict::CompactTranslationDict, m=measure(dict);
+#             T=coefficienttype(dict), options...)
+#     if iscompatible(dict, m)
+#         firstcolumn = zeros(T, length(dict))
+#         for (index,i) in enumerate(ordering(dict))
+#             firstcolumn[index] = innerproduct(dict, i, dict, ordering(dict)[1], m; options...)
+#         end
+#     	CirculantOperator(firstcolumn, dict, dict)
+#     else
+#         default_gramoperator(dict, m; T=T, options...)
+#     end
+# end
+#
+# function mixedgramoperator(d1::CompactTranslationDict, d2::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
+#     if iscompatible(d1, m) && iscompatible(d2, m) && length(d1) == length(d2)
+#         firstcolumn = zeros(T, length(d1))
+#         for i in ordering(d1)
+#             firstcolumn[value(i)] = innerproduct(d1, i, d2, ordering(d2)[1], m; options...)
+#         end
+#     	CirculantOperator(firstcolumn, d1, d2)
+#     else
+#         default_mixedgramoperator(d1, d2, measure; options...)
+#     end
+# end

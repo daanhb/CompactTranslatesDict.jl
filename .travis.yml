@@ -11,5 +11,12 @@ matrix:
         - julia: nightly
 notifications:
     email: false
+before_script:
+    - julia -e "using Pkg; Pkg.add(PackageSpec(url=\"http://github.com/daanhb/BasisFunctions.jl\",rev=\"${TRAVIS_BRANCH}\"))"
+    - julia -e "using Pkg; Pkg.add(PackageSpec(url=\"https://github.com/JuliaApproximation/DomainSets.jl\",rev=\"master\"))"
+    - julia -e "using Pkg; Pkg.add(PackageSpec(url=\"https://github.com/vincentcp/CardinalBSplines\",rev=\"master\"))"
+
+
+
 after_success:
     - julia -e 'cd(Pkg.dir("CompactTranslatesDict")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

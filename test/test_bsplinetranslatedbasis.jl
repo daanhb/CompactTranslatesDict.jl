@@ -1,10 +1,5 @@
-using BasisFunctions, DomainSets, StaticArrays, CompactTranslatesDict
-
-if VERSION < v"0.7-"
-    using Base.Test
-else
-    using Test, LinearAlgebra
-end
+using BasisFunctions, DomainSets, CompactTranslatesDict, Test, LinearAlgebra
+using BasisFunctions.Test: test_orthogonality_orthonormality
 
 function test_generic_periodicbsplinebasis(B,T)
     tol = sqrt(eps(real(T)))
@@ -26,15 +21,9 @@ function test_generic_periodicbsplinebasis(B,T)
 
     @test instantiate(B, 4, Float16)==B(4,3,Float16)
     @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
-    @test BasisFunctions.grid(b)==PeriodicEquispacedGrid(n,0,1)
+    @test interpolation_grid(b)==PeriodicEquispacedGrid(n,0,1)
     @test BasisFunctions.period(b)==T(1)
     @test BasisFunctions.stepsize(b)==T(1//5)
-
-    n = 3
-    b=B(n,1,T; scaled=false)
-    @test abs(sum(matrix(Gram(b)) - [2//3 1//6 1//6; 1//6 2//3 1//6;1//6 1//6 2//3]//n)) < tol
-    @test abs(sum(matrix(DualGram(b)) - [5/3 -1/3 -1/3; -1/3 5/3 -1/3; -1/3 -1/3 5/3]*n)) < tol
-
 end
 
 function test_translatedbsplines(T)
@@ -114,10 +103,10 @@ function test_translatedbsplines(T)
                 e1 = random_expansion(b1)
                 e2 = random_expansion(b2)
 
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b2))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b2), grid(b2))*e2)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b1))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b1), grid(b1))*e2)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b1))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b1), grid(b1))*e1)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b2))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b2), grid(b2))*e1)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, GridBasis(b2))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, GridBasis(b2), grid(b2))*e2)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, GridBasis(b1))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, GridBasis(b1), grid(b1))*e2)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, GridBasis(b1))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, GridBasis(b1), grid(b1))*e1)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, GridBasis(b2))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, GridBasis(b2), grid(b2))*e1)
 
                 mr = matrix(restriction_operator(b1, b2))
                 me = matrix(extension_operator(b2, b1))
@@ -136,10 +125,10 @@ function test_translatedbsplines(T)
                 e1 = random_expansion(b1)
                 e2 = random_expansion(b2)
 
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b2))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b2), grid(b2))*e2)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, gridbasis(b1))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, gridbasis(b1), grid(b1))*e2)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b1))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b1), grid(b1))*e1)
-                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, gridbasis(b2))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, gridbasis(b2), grid(b2))*e1)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, GridBasis(b2))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, GridBasis(b2), grid(b2))*e2)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b2, GridBasis(b1))*e2) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b2, GridBasis(b1), grid(b1))*e2)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, GridBasis(b1))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, GridBasis(b1), grid(b1))*e1)
+                @test BasisFunctions.coefficients(BasisFunctions.default_evaluation_operator(b1, GridBasis(b2))*e1) ≈ BasisFunctions.coefficients(grid_evaluation_operator(b1, GridBasis(b2), grid(b2))*e1)
 
                 mr = matrix(restriction_operator(b1, b2))
                 me = matrix(extension_operator(b2, b1))
@@ -154,6 +143,17 @@ function test_translatedbsplines(T)
     @test_throws AssertionError extension_operator(BSplineTranslatesBasis(4,0,T), BSplineTranslatesBasis(6,0,T))
 end
 
+
+function test_bspline_orthogonality_orthonormality()
+    for m in [FourierMeasure(),
+                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(4,0,1)),
+                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(4,0,1)),
+                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(8,0,1)),
+                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(8,0,1))]
+        @test BasisFunctions.unsafe_matrix(gramoperator(B, m)) isa Circulant
+        test_orthogonality_orthonormality(B, false, false, m)
+    end
+end
 
 
 

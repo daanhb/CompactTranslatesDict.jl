@@ -15,7 +15,7 @@ function test_bspline_platform(T)
 
         B = P
         g = BasisFunctions.oversampled_grid(B, oversampling)
-        E = CirculantOperator(evaluation_matrix(B[1],g)[:])*IndexExtensionOperator(B,gridbasis(g),1:oversampling:length(g))
+        E = CirculantOperator(evaluation_matrix(B[1],g)[:])*IndexExtensionOperator(B,GridBasis(g),1:oversampling:length(g))
         G = CirculantOperator(E'E*[1,zeros(length(g)-1)...]/length(B))
         DG = BasisFunctions.wrap_operator(B, B, inv(G))
 
@@ -45,8 +45,8 @@ function test_bspline_platform(T)
         g2 = BasisFunctions.oversampled_grid(B2,oversampling)
         g = g1×g2
 
-        E1 = CirculantOperator(evaluation_matrix(B1[1],g1)[:])*IndexExtensionOperator(B1,gridbasis(g1),1:oversampling:length(g1))
-        E2 = CirculantOperator(evaluation_matrix(B2[1],g2)[:])*IndexExtensionOperator(B2,gridbasis(g2),1:oversampling:length(g2))
+        E1 = CirculantOperator(evaluation_matrix(B1[1],g1)[:])*IndexExtensionOperator(B1,GridBasis(g1),1:oversampling:length(g1))
+        E2 = CirculantOperator(evaluation_matrix(B2[1],g2)[:])*IndexExtensionOperator(B2,GridBasis(g2),1:oversampling:length(g2))
 
         G1 = CirculantOperator(E1'E1*[1,zeros(length(g1)-1)...]/length(B1));
         G2 = CirculantOperator(E2'E2*[1,zeros(length(g2)-1)...]/length(B2));

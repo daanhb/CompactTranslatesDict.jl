@@ -1,11 +1,6 @@
 const My1DIndexType = Union{AbstractVector{Int}}
 const NdOperator{ELT} = Union{TensorProductOperator{ELT},OperatorSum{ELT}}
-
-if VERSION < v"0.7-"
-    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianRange{CartesianIndex{N}}}
-else
-    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
-end
+const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
 const MyIndexType = Union{My1DIndexType,MyNDIndexType}
 
 struct ExtResOperator{ELT} <: BasisFunctions.DictionaryOperator{ELT}
@@ -60,31 +55,29 @@ full_grid(a::IndexSubGrid) = supergrid(a)
 
 adjoint(M::ExtResOperator{ELT}) where ELT = ExtResOperator{ELT}(full_dict(dest(M)), full_dict(src(M)), destindices(M), srcindices(M), M.op')
 
-is_fastly_indexable(::MatrixOperator) = true
+is_fastly_indexable(::BasisFunctions.ArrayOperator) = true
 
-fast_getindex(m::MatrixOperator, i::Int, j::Int) = getindex(BasisFunctions.object(m),i,j)
+fast_getindex(m::BasisFunctions.ArrayOperator, i::Int, j::Int) = getindex(m.A,i,j)
 
-is_fastly_indexable(::ExtResOperator) = true
-
-is_fastly_indexable(w::WrappedOperator) = is_fastly_indexable(w.op)
+is_fastly_indexable(m::ExtResOperator) = is_fastly_indexable(m.A)
+is_fastly_indexable(m::AbstractArray) = true
 
 is_fastly_indexable(a...) = false
 
-is_fastly_indexable(T::TensorProductOperator) = VERSION < v"0.7-" ?
-    reduce(&, true, map(is_fastly_indexable, elements(T))) :
+is_fastly_indexable(T::TensorProductOperator) =
     reduce(&, map(is_fastly_indexable, elements(T)); init=true)
-is_fastly_indexable(T::OperatorSum) = VERSION < v"0.7-" ?
-    reduce(&, true, map(is_fastly_indexable, elements(T))) :
+is_fastly_indexable(T::OperatorSum) =
     reduce(&, map(is_fastly_indexable, elements(T)); init=true)
 
+tovector(a::AbstractArray) = reshape(a, length(a))
 ExtResOperator(op::DictionaryOperator, srcindices::MyIndexType) =
-    ExtResOperator(eachindex(dest(op)), op, srcindices)
+    ExtResOperator(tovector(eachindex(dest(op))), op, srcindices)
 
 ExtResOperator(destindices::MyIndexType, op::DictionaryOperator) =
-    ExtResOperator(destindices, op, eachindex(src(op)))
+    ExtResOperator(destindices, op, tovector(eachindex(src(op))))
 
 ExtResOperator(op::DictionaryOperator) =
-    ExtResOperator(eachindex(dest(op)), op, eachindex(src(op)))
+    ExtResOperator(tovector(eachindex(dest(op))), op, tovector(eachindex(src(op))))
 
 getindex(M::DictionaryOperator, i::My1DIndexType, j::My1DIndexType) =
     ExtResOperator(i, M, j)
@@ -111,10 +104,6 @@ getindex(M::ExtResOperator, i::My1DIndexType, j::Colon) =
 function getindex(M::ExtResOperator, i::MyNDIndexType, j::My1DIndexType)
     @assert length(size(destindices(M))) > 1
     ExtResOperator(destindices(M)[i], M.op, srcindices(M)[j])
-end
-
-if VERSION < v"0.7-"
-    getindex(cr::CartesianRange, i::AbstractVector{Int}) = collect(cr)[i]
 end
 
 function getindex(M::ExtResOperator, i::My1DIndexType, j::MyNDIndexType)
@@ -151,8 +140,14 @@ function getindex(M::NdOperator, i::My1DIndexType, j::Colon)
 end
 
 
+# checkbounds(op::DictionaryOperator, i::Colon, j::Int) =
+# 	1 <= j <= size(op,2) || throw(BoundsError())
+#
+# checkbounds(op::DictionaryOperator, i::Int, j::Colon) =
+# 	1 <= i <= size(op,1) || throw(BoundsError())
+# checkbounds(op::DictionaryOperator, i::Colon, j::Colon) = true
 
-getindex(M::ExtResOperator, i::Int, j::Int) =
+unsafe_getindex(M::ExtResOperator, i::Int, j::Int) =
     fast_getindex(M.op, destindices(M)[i], srcindices(M)[j])
 
 matrix(M::ExtResOperator) =
