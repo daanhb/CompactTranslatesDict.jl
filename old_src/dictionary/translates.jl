@@ -29,8 +29,6 @@ name(::Type{B}) where {B<:CompactTranslationDict}= "Dictionary of equispaced tra
 const TransIndex = ShiftedIndex{1}
 ordering(b::CompactTranslationDict) = ShiftedIndexList{1}(length(b))
 
-has_unitary_transform(::CompactTranslationDict) = false
-
 support(::CompactTranslationDict{T}) where T = UnitInterval{T}()
 
 support(b::CompactTranslationDict, idx) = support(b, native_index(b, idx))
@@ -116,7 +114,7 @@ function grid_evaluation_operator(s::CompactTranslationDict, dgs::GridBasis, gri
         IndexableVerticalBandedOperator(s, dgs, a, sampling_factor, offset-1)
     else
         @warn("slow evaluation operator")
-        default_evaluation_operator(s, dgs; options...)
+        dense_evaluation_operator(s, dgs; options...)
     end
 end
 
@@ -137,12 +135,21 @@ function _get_array_offset(a)
     end
 end
 
-Gram(s::CompactTranslationDict; options...) = CirculantOperator(s, s, primalgramcolumn(s; options...); options...)
+gramoperator1(s::CompactTranslationDict, measure::Measure; options...) = CirculantOperator(primalgramcolumn(s, measure; options...), s, s; options...)
 
-function UnNormalizedGram(s::CompactTranslationDict, oversampling = 1)
-    grid = BasisFunctions.oversampled_grid(s, oversampling)
-    CirculantOperator(evaluation_operator(s, grid)'*evaluation_operator(s, grid))
+function firstgramcolumn(dict::CompactTranslationDict, measure::FourierMeasure; T=coefficienttype(s, domaintype(measure)), options...)
+    firstcolumn = zeros(T, length(dict))
+    for i in 1:length(dict)
+        firstcolumn[i] = firstgramcolumnelement(dict, measure, i; T=T, options...)
+    end
+    firstcolumn
 end
+
+@inline firstgramcolumnelement(dict::CompactTranslationDict, measure::FourierMeasure, i::Int; T=coefficienttype(s), options...) =
+        convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
+
+gramoperator(s::CompactTranslationDict, measure::DiscreteMeasure; options...) =
+    CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
 
 # All inner products between elements of CompactTranslationDict are known by the first column of the (circulant) gram matrix.
 function primalgramcolumn(s::CompactTranslationDict; options...)

@@ -5,7 +5,7 @@ include("test_sum.jl")
 include("test_banded_operators.jl")
 include("test_bsplinetranslatedbasis.jl")
 
-include("test_diff_bspline_platform.jl")
+# include("test_diff_bspline_platform.jl")
 @testset begin
     test_bspline_orthogonality_orthonormality()
 end
@@ -17,4 +17,4 @@ for T in types
     end
 end
 
-include("test_platform.jl")
+# include("test_platform.jl")

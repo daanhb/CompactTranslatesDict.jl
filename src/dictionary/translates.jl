@@ -27,8 +27,6 @@ name(::Type{B}) where {B<:CompactTranslationDict}= "Dictionary of equispaced tra
 const TransIndex = ShiftedIndex{1}
 ordering(b::CompactTranslationDict) = ShiftedIndexList{1}(length(b))
 
-has_unitary_transform(::CompactTranslationDict) = false
-
 support(::CompactTranslationDict{T}) where T = UnitInterval{T}()
 
 support(b::CompactTranslationDict, idx) = support(b, native_index(b, idx))
@@ -154,7 +152,7 @@ function gramoperator(dict::CompactTranslationDict, measure::UniformDiracCombMea
     end
 end
 
-_translatescirculantoperator(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...) = 
+_translatescirculantoperator(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...) =
 	CirculantOperator(firstgramcolumn(dict, measure; T=T, options...), dict, dict; T=T)
 
 function firstgramcolumn(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...)

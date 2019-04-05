@@ -48,7 +48,7 @@ end
 function bspline_restriction_operator(s1::PeriodicBSplineBasis, s2::PeriodicBSplineBasis; options...)
     @assert length(s1) == 2*length(s2)
     r = _binomial_circulant(s1)
-    e = eigenvalues(r)
+    e = eigvals(r)
     n = length(e)
     d = similar(e)
     eabs = map(abs, e)
@@ -59,8 +59,7 @@ function bspline_restriction_operator(s1::PeriodicBSplineBasis, s2::PeriodicBSpl
     end
     d .= d ./ e
     d[map(isnan,d)] .= 0
-
-    IndexRestrictionOperator(s1,s2,1:2:length(s1))*CirculantOperator(s1, s1, DiagonalOperator(d))
+    IndexRestrictionOperator(s1,s2,1:2:length(s1))*CirculantOperator(real.(ifft(d)), s1, s1)
 end
 
 """
@@ -107,9 +106,9 @@ function _binomial_circulant(s::BSplineTranslatesBasis{T,K,SCALED}) where {T,K,S
         c[k] = binomial(K+1, k-1)
     end
     if SCALED
-        sqrt(A(1//2))/(1<<K)*CirculantOperator(s, c)
+        sqrt(A(1//2))/(1<<K)*CirculantOperator(c, s)
     else
-        A(1)/(1<<K)*CirculantOperator(s, c)
+        A(1)/(1<<K)*CirculantOperator(c, s)
     end
 end
 
@@ -121,6 +120,9 @@ function firstgramcolumn(dict::BSplineTranslatesBasis, measure::FourierMeasure; 
     firstcolumn
 end
 
+iscompatible(dict::BSplineTranslatesBasis, grid::MidpointEquispacedGrid) = iseven(degree(dict)) && isperiodic_compatible_grid(dict, grid)
+iscompatible(dict::BSplineTranslatesBasis, grid::PeriodicEquispacedGrid) = isodd(degree(dict)) && isperiodic_compatible_grid(dict, grid)
+
 @inline function firstgramcolumnelement(dict::BSplineTranslatesBasis{S,K,SCALED}, measure::FourierMeasure, i::Int; T=coefficienttype(s), options...) where {S,K,SCALED}
     if length(dict) <= 2K+1
         return convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
@@ -130,7 +132,7 @@ end
     if SCALED
         convert(T,r)
     else
-        convert(T,r)/convert(T,length(s))
+        convert(T,r)/convert(T,length(dict))
     end
 end
 
@@ -149,10 +151,10 @@ Base.similar(d::DiffBSplineTranslatesBasis{S,K,D}, ::Type{T}, n::Int) where {S,T
 
 
 
-DiffBSplineTranslatesBasis(n::Int, DEGREE::Int, ::Type{T} = Float64; options...) where {T} =
-    DiffBSplineTranslatesBasis{T}(n, degree; options...)
+DiffBSplineTranslatesBasis(n::Int, degree::Int, diff::Int, ::Type{T} = Float64; options...) where {T} =
+    DiffBSplineTranslatesBasis{T}(n, degree, diff; options...)
 
-DiffBSplineTranslatesBasis{T}(n::Int, degree::Int; options...) where {T} = DiffBSplineTranslatesBasis{T,degree}(n; options...)
+DiffBSplineTranslatesBasis{T}(n::Int, degree::Int, diff::Int; options...) where {T} = DiffBSplineTranslatesBasis{T,degree,diff}(n; options...)
 DiffBSplineTranslatesBasis{T,degree}(n::Int; D=0) where {T,degree} = DiffBSplineTranslatesBasis{T,degree,D}(n)
 
 instantiate(::Type{DiffBSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = DiffBSplineTranslatesBasis(n,3,1,T)

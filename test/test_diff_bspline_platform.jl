@@ -1,7 +1,7 @@
 
 
 using CompactTranslatesDict, CompactTranslatesDict.SymbolicDifferentialOperators
-(VERSION<v"0.7-") ? using Base.Test : using Test
+using Test
 CompactTranslatesDict.bspline_basis(Float64, (10,10), (2,3), (δx^2+δy^3)*(δx^2+δy^3))
 
 

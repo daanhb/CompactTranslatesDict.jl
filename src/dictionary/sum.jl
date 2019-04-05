@@ -59,7 +59,7 @@ grid_evaluation_operator(S::CompactTranslationDictSum, dgs::GridBasis, grid::Pro
 grid_evaluation_operator(s::CompactTranslationDictSum, dgs::GridBasis, subgrid::AbstractSubGrid; options...) =
     BasisFunctions._grid_evaluation_operator(s, dgs, subgrid; options...)
 
-function UnNormalizedGram(s::CompactTranslationDictSum, oversampling = 1)
-    grid = oversampled_grid(s, oversampling)
-    TensorCirculantOperator(evaluation_operator(s, grid)'*evaluation_operator(s, grid))
-end
+# function UnNormalizedGram(s::CompactTranslationDictSum, oversampling = 1)
+#     grid = oversampled_grid(s, oversampling)
+#     TensorCirculantOperator(evaluation_operator(s, grid)'*evaluation_operator(s, grid))
+# end

@@ -1,7 +1,7 @@
 
-using CompactTranslatesDict, CompactTranslatesDict.SymbolicDifferentialOperators, BasisFunctions, StaticArrays, DomainSets
+using CompactTranslatesDict, BasisFunctions, StaticArrays, DomainSets#, CompactTranslatesDict.SymbolicDifferentialOperators
 types = [Float64, BigFloat]
-(VERSION<v"0.7-") ? using Base.Test : using Test
+using Test
 
 function test_bspline_platform(T)
     #  1D
