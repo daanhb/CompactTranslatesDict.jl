@@ -1,7 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
 [[BasisFunctions]]
-deps = ["AbstractTrees", "BlockArrays", "Calculus", "DSP", "DomainSets", "FFTW", "FastGaussQuadrature", "FastTransforms", "FillArrays", "GenericLinearAlgebra", "LinearAlgebra", "Pkg", "QuadGK", "RecipesBase", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test", "ToeplitzMatrices"]
 git-tree-sha1 = "b8cb8e4bba4f9fbb4937b4bb205b7bd0900da516"
 repo-rev = "development"
 repo-url = "https://github.com/daanhb/BasisFunctions.jl"
@@ -9,7 +8,6 @@ uuid = "4343a256-5453-507d-8aad-01a9d7189916"
 version = "0.0.0"
 
 [[CardinalBSplines]]
-deps = ["LinearAlgebra", "SpecialFunctions"]
 git-tree-sha1 = "356da9b327a941b9a8dc19d2ef03c78e54ca6f68"
 repo-rev = "master"
 repo-url = "https://github.com/vincentcp/CardinalBSplines"
