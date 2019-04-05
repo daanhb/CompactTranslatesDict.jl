@@ -76,7 +76,7 @@ Base.size(b::BSplineTranslatesBasis) = (length(b),)
 
 Base.similar(d::BSplineTranslatesBasis{S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = BSplineTranslatesBasis{T,K,SCALED}(n)
 
-BSplineTranslatesBasis(n::Int, DEGREE::Int, ::Type{T} = Float64; options...) where {T} =
+BSplineTranslatesBasis(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
     BSplineTranslatesBasis{T}(n, degree; options...)
 
 BSplineTranslatesBasis{T}(n::Int, degree::Int; options...) where {T} = BSplineTranslatesBasis{T,degree}(n; options...)
