@@ -10,17 +10,10 @@ struct OperatorSum{T,S,N} <: DictionaryOperator{T}
     function OperatorSum{T,S,N}(s, d, ops, coefficients, scratch) where {T,S,N}
         # We don't enforce that source and destination of op1 and op2 are the same, but at least
         # their sizes and coefficient types must match.
-        if VERSION < v"0.7-"
-            @assert reduce(&, true, size(src(ops[1]))==size(src(op)) for op in ops)
-            @assert reduce(&, true, size(dest(ops[1]))==size(dest(op)) for op in ops)
-            @assert reduce(&, true, T==coefficienttype(dest(op)) for op in ops)
-            @assert reduce(&, true, T==coefficienttype(dest(op)) for op in ops)
-        else 
-            @assert reduce(&, size(src(ops[1]))==size(src(op)) for op in ops; init=true)
-            @assert reduce(&, size(dest(ops[1]))==size(dest(op)) for op in ops; init=true)
-            @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
-            @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
-        end
+        @assert reduce(&, size(src(ops[1]))==size(src(op)) for op in ops; init=true)
+        @assert reduce(&, size(dest(ops[1]))==size(dest(op)) for op in ops; init=true)
+        @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
+        @assert reduce(&, T==coefficienttype(dest(op)) for op in ops; init=true)
         @assert length(ops) == length(coefficients)
         new{T,S,N}(s, d, ops, coefficients, scratch)
     end

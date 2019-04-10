@@ -146,9 +146,10 @@ gramoperator(dict::CompactTranslationDict, measure::FourierMeasure; options...) 
 
 function gramoperator(dict::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
     if isperiodic_compatible_grid(dict, grid(measure))
-        _translatescirculantoperator(dict, measure; options...)
+        @show Matrix(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
+        CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
     else
-        BasisFunctions.default_gramoperator(dict, measure; options...)
+        BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...)
     end
 end
 

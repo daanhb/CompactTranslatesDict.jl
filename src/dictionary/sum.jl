@@ -7,15 +7,9 @@ struct CompactTranslationDictSum{N,S,T} <: DerivedDict{S,T}
 
     function CompactTranslationDictSum{N,S,T}(dicts, coefs) where {N,S,T}
         superdict = dicts[1]
-        if VERSION < v"0.7-"
-            @assert reduce(&, true, size(superdict)==size(dict) for dict in dicts)
-            @assert reduce(&, true, infimum(support(superdict))≈infimum(support(dict)) for dict in dicts)
-            @assert reduce(&, true, supremum(support(superdict))≈supremum(support(dict)) for dict in dicts)
-        else
-            @assert reduce(&, size(superdict)==size(dict) for dict in dicts; init=true)
-            @assert reduce(&, infimum(support(superdict))≈infimum(support(dict)) for dict in dicts; init=true)
-            @assert reduce(&, supremum(support(superdict))≈supremum(support(dict)) for dict in dicts; init=true)
-        end
+        @assert reduce(&, size(superdict)==size(dict) for dict in dicts; init=true)
+        @assert reduce(&, infimum(support(superdict))≈infimum(support(dict)) for dict in dicts; init=true)
+        @assert reduce(&, supremum(support(superdict))≈supremum(support(dict)) for dict in dicts; init=true)
         @assert eltype(coefs) == T
         @assert length(dicts) == length(coefs)
         new{N,S,T}(superdict, tuple(dicts...), coefs)

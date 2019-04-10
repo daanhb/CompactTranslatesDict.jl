@@ -1,11 +1,6 @@
 const My1DIndexType = Union{AbstractVector{Int}}
 const NdOperator{ELT} = Union{TensorProductOperator{ELT},OperatorSum{ELT}}
-
-if VERSION < v"0.7-"
-    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianRange{CartesianIndex{N}}}
-else
-    const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
-end
+const MyNDIndexType{N} = Union{AbstractVector{CartesianIndex{N}},CartesianIndices{N}}
 const MyIndexType = Union{My1DIndexType,MyNDIndexType}
 
 struct ExtResOperator{ELT} <: BasisFunctions.DictionaryOperator{ELT}
@@ -70,11 +65,9 @@ is_fastly_indexable(w::WrappedOperator) = is_fastly_indexable(w.op)
 
 is_fastly_indexable(a...) = false
 
-is_fastly_indexable(T::TensorProductOperator) = VERSION < v"0.7-" ?
-    reduce(&, true, map(is_fastly_indexable, elements(T))) :
+is_fastly_indexable(T::TensorProductOperator) =
     reduce(&, map(is_fastly_indexable, elements(T)); init=true)
-is_fastly_indexable(T::OperatorSum) = VERSION < v"0.7-" ?
-    reduce(&, true, map(is_fastly_indexable, elements(T))) :
+is_fastly_indexable(T::OperatorSum) =
     reduce(&, map(is_fastly_indexable, elements(T)); init=true)
 
 ExtResOperator(op::DictionaryOperator, srcindices::MyIndexType) =
@@ -111,10 +104,6 @@ getindex(M::ExtResOperator, i::My1DIndexType, j::Colon) =
 function getindex(M::ExtResOperator, i::MyNDIndexType, j::My1DIndexType)
     @assert length(size(destindices(M))) > 1
     ExtResOperator(destindices(M)[i], M.op, srcindices(M)[j])
-end
-
-if VERSION < v"0.7-"
-    getindex(cr::CartesianRange, i::AbstractVector{Int}) = collect(cr)[i]
 end
 
 function getindex(M::ExtResOperator, i::My1DIndexType, j::MyNDIndexType)
