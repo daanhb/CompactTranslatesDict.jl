@@ -17,7 +17,8 @@ interpolation_grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ?
 
 kernel_span(b::DiffPeriodicBSplineBasis) = Interval(zero(domaintype(b)), stepsize(b)*convert(domaintype(b), degree(b)+1))
 
-eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} = (n = length(b); sqrt(T(n))*n^D*evaluate_periodic_Bspline_derivative(Val{K}, Val{D}, n*x, n, T))::T
+eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
+    (n = length(b); sqrt(T(n))*n^D*evaluate_periodic_Bspline_derivative(Val{K}(), Val{D}(), n*x, n, T))::T
 
 degree(b::DICT where DICT <: DiffPeriodicBSplineBasis{T,K} ) where {T,K} = K
 
@@ -83,8 +84,10 @@ BSplineTranslatesBasis{T,degree}(n::Int; scaled=true) where {T,degree} = BSpline
 
 
 
-eval_kernel(b::BSplineTranslatesBasis{T,K,true}, x) where {K,T} = (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
-eval_kernel(b::BSplineTranslatesBasis{T,K,false}, x) where {K,T} = (n = length(b); evaluate_periodic_Bspline(Val{K}, n*x, n, T))::T
+eval_kernel(b::BSplineTranslatesBasis{T,K,true}, x) where {K,T} =
+    (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}(), n*x, n, T))::T
+eval_kernel(b::BSplineTranslatesBasis{T,K,false}, x) where {K,T} =
+    (n = length(b); evaluate_periodic_Bspline(Val{K}(), n*x, n, T))::T
 
 scaled(b::BSplineTranslatesBasis{T,K,SCALED}) where {T,K,SCALED} = SCALED
 
