@@ -49,9 +49,9 @@ version = "0.4.1"
 
 [[CardinalBSplines]]
 deps = ["LinearAlgebra", "SpecialFunctions"]
-git-tree-sha1 = "356da9b327a941b9a8dc19d2ef03c78e54ca6f68"
+git-tree-sha1 = "468802bfe390495081cf41550e5c188cafaaa492"
 repo-rev = "master"
-repo-url = "https://github.com/vincentcp/CardinalBSplines"
+repo-url = "https://github.com/vincentcp/CardinalBSplines.jl"
 uuid = "87d49508-7ad8-11e8-0eda-cb6920b58870"
 version = "0.0.0"
 
@@ -107,9 +107,9 @@ version = "0.2.4"
 
 [[FastGaussQuadrature]]
 deps = ["Compat", "LinearAlgebra", "SpecialFunctions"]
-git-tree-sha1 = "3861ecfe06076f9310a43469fbb676aaeba7893d"
+git-tree-sha1 = "769ac4057ed875f433372e9a571a2cb86347d1be"
 uuid = "442a2c76-b920-505d-bb47-c5924d526838"
-version = "0.3.2"
+version = "0.3.3"
 
 [[FastTransforms]]
 deps = ["AbstractFFTs", "Compat", "DSP", "FFTW", "HierarchicalMatrices", "LinearAlgebra", "LowRankApprox", "ProgressMeter", "SpecialFunctions", "ToeplitzMatrices"]
@@ -125,7 +125,7 @@ version = "0.5.0"
 
 [[FrameFun]]
 deps = ["BasisFunctions", "Compat", "DomainSets", "FillArrays", "GenericLinearAlgebra", "InteractiveUtils", "LinearAlgebra", "Printf", "QuadGK", "RecipesBase", "StaticArrays"]
-git-tree-sha1 = "3c7a40fb6be65b720850a8e391cecfb9f2905e32"
+git-tree-sha1 = "782f314f24c54131141bc944a5b333beb721edcc"
 repo-rev = "development"
 repo-url = "https://github.com/daanhb/FrameFun.jl"
 uuid = "bbafa164-4497-5d18-87cf-33e911f89480"

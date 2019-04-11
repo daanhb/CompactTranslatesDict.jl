@@ -1,5 +1,5 @@
 # translates_of_bsplines.jl
-using CardinalBSplines
+using CardinalBSplines: evaluate_periodic_Bspline, evaluate_periodic_Bspline_derivative
 abstract type DiffPeriodicBSplineBasis{T,K,D} <: CompactTranslationDict{T}
 end
 
@@ -17,7 +17,7 @@ interpolation_grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ?
 
 kernel_span(b::DiffPeriodicBSplineBasis) = Interval(zero(domaintype(b)), stepsize(b)*convert(domaintype(b), degree(b)+1))
 
-eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} = (n = length(b); sqrt(T(n))*n^D*diff_evaluate_periodic_Bspline(Val{K}, Val{D}, n*x, n, T))::T
+eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} = (n = length(b); sqrt(T(n))*n^D*evaluate_periodic_Bspline_derivative(Val{K}, Val{D}, n*x, n, T))::T
 
 degree(b::DICT where DICT <: DiffPeriodicBSplineBasis{T,K} ) where {T,K} = K
 
