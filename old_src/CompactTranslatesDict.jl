@@ -7,7 +7,7 @@ using .SymbolicDifferentialOperators: dimension_names, coefficient, operator, sc
 
 using BasisFunctions, CardinalBSplines, DomainSets
 
-using FrameFun: GenericPlatform, DoublingSequence, MultiplySequence, TensorSequence, extension_frame_platform, tensor_generator
+using FrameFun: GenericPlatform, DoublingInfiniteArray, MultiplyInfiniteArray, TensorInfiniteArray, extension_frame_platform, tensor_generator
 export extension_frame_platform
 
 using LinearAlgebra, FFTW
