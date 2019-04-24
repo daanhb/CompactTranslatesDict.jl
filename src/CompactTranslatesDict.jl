@@ -1,7 +1,7 @@
 __precompile__()
 module CompactTranslatesDict
 
-using BasisFunctions, CardinalBSplines, DomainSets, QuadGK
+using BasisFunctions, CardinalBSplines, DomainSets
 using LinearAlgebra, FFTW
 
 import Base: ==, getindex, length, size, unsafe_getindex, checkbounds
