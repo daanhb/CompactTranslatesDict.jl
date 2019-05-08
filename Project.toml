@@ -1,6 +1,7 @@
 name = "CompactTranslatesDict"
 uuid = "455b6770-8cd4-11e8-0457-dd6f5558b097"
 version = "0.0.0"
+
 [deps]
 BasisFunctions = "4343a256-5453-507d-8aad-01a9d7189916"
 CardinalBSplines = "87d49508-7ad8-11e8-0eda-cb6920b58870"
@@ -8,9 +9,7 @@ DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FrameFun = "bbafa164-4497-5d18-87cf-33e911f89480"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
