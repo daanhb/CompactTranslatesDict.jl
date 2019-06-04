@@ -144,11 +144,11 @@ measure(b::CompactTranslationDict{T}) where T = FourierMeasure{T}()
 gramoperator(dict::CompactTranslationDict, measure::FourierMeasure; options...) =
     _translatescirculantoperator(dict, measure)
 
-function gramoperator(dict::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
-    if isperiodic_compatible_grid(dict, grid(measure))
-        CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
+function gramoperator(dict::CompactTranslationDict, measure::BasisFunctions.DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill; options...)
+    if isperiodic_compatible_grid(dict, grid)
+        CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...))
     else
-        BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...)
+        BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...)
     end
 end
 

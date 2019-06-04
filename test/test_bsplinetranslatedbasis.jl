@@ -141,10 +141,10 @@ end
 function test_bspline_orthogonality_orthonormality()
     B = BSplineTranslatesBasis(4,3)
     for m in [FourierMeasure(),
-                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(4,0,1)),
-                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(4,0,1)),
-                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(8,0,1)),
-                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(8,0,1))]
+                discretemeasure(PeriodicEquispacedGrid(4,0,1)),
+                discretemeasure(MidpointEquispacedGrid(4,0,1)),
+                discretemeasure(PeriodicEquispacedGrid(8,0,1)),
+                discretemeasure(MidpointEquispacedGrid(8,0,1))]
         @test BasisFunctions.unsafe_matrix(gramoperator(B, m)) isa Circulant
         test_orthogonality_orthonormality(B, false, false, m; overquad=10)
     end
