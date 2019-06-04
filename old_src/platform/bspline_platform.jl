@@ -35,9 +35,9 @@ end
 bspline_sampler(::Type{T}, primal, oversampling::Int) where {T} = n-> GridSamplingOperator(gridbasis(grid(primal(n*oversampling)),T))
 
 # params
-bspline_param(init::Int) = DoublingSequence(init)
+bspline_param(init::Int) = DoublingInfiniteArray(init)
 
-bspline_param(init::NTuple{N,Int}) where N = TensorSequence([MultiplySequence(i,2 .^(1/length(init))) for i in init])
+bspline_param(init::NTuple{N,Int}) where N = TensorInfiniteArray([MultiplyInfiniteArray(i,2 .^(1/length(init))) for i in init])
 
 # Platform
 bspline_platform(::Type{T}, init::NTuple{1,Int}, degree::NTuple{1,Int}, oversampling::Int) where {T} =

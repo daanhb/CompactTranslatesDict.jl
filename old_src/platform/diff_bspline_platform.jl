@@ -66,9 +66,9 @@ dual_diff_bspline_generator(primal_bspline_generator, oversampling) = DualDiffBS
 diff_bspline_sampler(::Type{T}, primal, oversampling::Int) where {T} = n-> GridSamplingOperator(gridbasis(grid(primal(map(x->oversampling*x, n))),T))
 
 # params
-diff_bspline_param(init::NTuple{N,Int}) where N = BasisFunctions.TensorSequence([BasisFunctions.MultiplySequence(i,2 .^(1/length(init))) for i in init])
+diff_bspline_param(init::NTuple{N,Int}) where N = BasisFunctions.TensorInfiniteArray([BasisFunctions.MultiplyInfiniteArray(i,2 .^(1/length(init))) for i in init])
 
-diff_bspline_param(init::Int) = BasisFunctions.DoublingSequence(init)
+diff_bspline_param(init::Int) = BasisFunctions.DoublingInfiniteArray(init)
 
 # Platform
 function bspline_platform(::Type{T}, init::NTuple{N,Int}, degree::NTuple{N,Int}, oversampling::Int, d::SymbolicDifferentialOperators.AbstractDiffOperator, dns::NTuple{N,Char}=dimension_names(d)) where {N,T}

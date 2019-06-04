@@ -5,8 +5,7 @@ function test_generic_periodicbsplinebasis(B,T)
     tol = sqrt(eps(real(T)))
     n = 5
     b = B(n,3, T)
-    @test leftendpoint(support(b)) == 0
-    @test rightendpoint(support(b))==1
+    @test support(b)≈UnitInterval{T}()
 
     @test length(b)==5
     @test CompactTranslatesDict.degree(b)==3
@@ -16,9 +15,9 @@ function test_generic_periodicbsplinebasis(B,T)
 
     @test instantiate(B, 4, Float16)==B(4,3,Float16)
     @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
-    @test interpolation_grid(b)==PeriodicEquispacedGrid(n,0,1)
+    @test interpolation_grid(b)==PeriodicEquispacedGrid{T}(n,0,1)
     @test BasisFunctions.period(b)==T(1)
-    @test BasisFunctions.stepsize(b)==T(1//5)
+    @test step(b)==T(1//5)
 end
 
 function test_translatedbsplines(T)
@@ -142,10 +141,10 @@ end
 function test_bspline_orthogonality_orthonormality()
     B = BSplineTranslatesBasis(4,3)
     for m in [FourierMeasure(),
-                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(4,0,1)),
-                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(4,0,1)),
-                BasisFunctions.DiscreteMeasure(PeriodicEquispacedGrid(8,0,1)),
-                BasisFunctions.DiscreteMeasure(MidpointEquispacedGrid(8,0,1))]
+                discretemeasure(PeriodicEquispacedGrid(4,0,1)),
+                discretemeasure(MidpointEquispacedGrid(4,0,1)),
+                discretemeasure(PeriodicEquispacedGrid(8,0,1)),
+                discretemeasure(MidpointEquispacedGrid(8,0,1))]
         @test BasisFunctions.unsafe_matrix(gramoperator(B, m)) isa Circulant
         test_orthogonality_orthonormality(B, false, false, m; overquad=10)
     end

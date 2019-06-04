@@ -1,20 +1,29 @@
+
 language: julia
 os:
   - linux
   - osx
 julia:
+  - 1.1
   - nightly
-  - 1.0
 matrix:
     allow_failures:
         - julia: nightly
 notifications:
-    email: false
+  email: false
+
 before_script:
-    - cp test/Manifest.toml .
-    - julia -e "using Pkg; Pkg.instantiate()"
-
-
+  - julia --color=yes -e "using Pkg;Pkg.Registry.add(RegistrySpec(url=\"https://github.com/vincentcp/FrameFunRegistry\"));"
+  - julia --color=yes -e "using Pkg;Pkg.Registry.add(RegistrySpec(url=\"https://github.com/JuliaRegistries/General\"));"
 
 after_success:
-    - julia -e 'using Pkg;cd(Pkg.dir("CompactTranslatesDict")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+  - julia --project=coverage/ --color=yes coverage/coverage.jl
+
+# jobs:
+#     include:
+#         - stage: "Documentation"
+#           julia: 1.1
+#           os: linux
+#           script:
+#             - julia --project=docs/ --color=yes docs/make.jl deploy
+#           after_success: skip
