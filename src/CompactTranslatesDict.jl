@@ -1,10 +1,10 @@
 __precompile__()
 module CompactTranslatesDict
 
-using BasisFunctions, CardinalBSplines, DomainSets
+using BasisFunctions, CardinalBSplines, DomainSets, FillArrays
 using LinearAlgebra, FFTW
 
-import Base: ==, getindex, length, size, unsafe_getindex, checkbounds
+import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step
 
 # Dictionaries
 using BasisFunctions
@@ -12,7 +12,7 @@ using BasisFunctions: ShiftedIndex, ShiftedIndexList, op_eltype, dense_evaluatio
 using BasisFunctions: UniformDiracCombMeasure, grid, default_gramoperator
 import BasisFunctions: hasmeasure, measure, gramoperator, innerproduct_native, mixedgramoperator
 import BasisFunctions: support, interpolation_grid, period
-import BasisFunctions: stepsize, approx_length
+import BasisFunctions: approx_length
 import BasisFunctions: transform_from_grid, transform_to_grid, hasgrid_transform, iscompatible
 import BasisFunctions: grid_evaluation_operator, unsafe_eval_element, similar_dictionary
 import BasisFunctions: matrix, apply!, adjoint, unsafe_wrap_operator, matrix!

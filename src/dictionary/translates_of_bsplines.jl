@@ -5,20 +5,20 @@ end
 
 # For the B spline with degree 1 (hat functions) the MidpointEquispacedGrid does not lead to evaluation_matrix that is non singular
 compatible_grid(b::DiffPeriodicBSplineBasis, grid::MidpointEquispacedGrid) = iseven(degree(b)) &&
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
+    suppport(b)≈support(grid) && (length(b)==length(grid))
 
 compatible_grid(b::DiffPeriodicBSplineBasis, grid::PeriodicEquispacedGrid) = isodd(degree(b)) &&
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (length(b)==length(grid))
+    suppport(b)≈support(grid) && (length(b)==length(grid))
     # we use a PeriodicEquispacedGrid in stead
 
 interpolation_grid(b::DiffPeriodicBSplineBasis) = isodd(degree(b)) ?
     PeriodicEquispacedGrid(length(b), support(b)) :
     MidpointEquispacedGrid(length(b), support(b))
 
-kernel_span(b::DiffPeriodicBSplineBasis) = Interval(zero(domaintype(b)), stepsize(b)*convert(domaintype(b), degree(b)+1))
+kernel_span(b::DiffPeriodicBSplineBasis) = Interval(zero(domaintype(b)), step(b)*convert(domaintype(b), degree(b)+1))
 
 eval_kernel(b::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
-    (n = length(b); sqrt(T(n))*n^D*evaluate_periodic_Bspline_derivative(Val{K}(), Val{D}(), n*x, n, T))::T
+    (n = length(b); sqrt(T(n))*n^D*evaluate_periodic_Bspline_derivative(Val{K}(), Val{D}(), n*x, n, T))
 
 degree(b::DICT where DICT <: DiffPeriodicBSplineBasis{T,K} ) where {T,K} = K
 
@@ -85,9 +85,9 @@ BSplineTranslatesBasis{T,degree}(n::Int; scaled=true) where {T,degree} = BSpline
 
 
 eval_kernel(b::BSplineTranslatesBasis{T,K,true}, x) where {K,T} =
-    (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}(), n*x, n, T))::T
+    (n = length(b); sqrt(T(n))*evaluate_periodic_Bspline(Val{K}(), n*x, n, T))
 eval_kernel(b::BSplineTranslatesBasis{T,K,false}, x) where {K,T} =
-    (n = length(b); evaluate_periodic_Bspline(Val{K}(), n*x, n, T))::T
+    (n = length(b); evaluate_periodic_Bspline(Val{K}(), n*x, n, T))
 
 scaled(b::BSplineTranslatesBasis{T,K,SCALED}) where {T,K,SCALED} = SCALED
 

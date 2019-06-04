@@ -31,7 +31,7 @@ support(::CompactTranslationDict{T}) where T = UnitInterval{T}()
 
 support(b::CompactTranslationDict, idx) = support(b, native_index(b, idx))
 
-support(b::CompactTranslationDict{T}, idx::TransIndex) where {T} = periodize_interval(value(idx)*stepsize(b)+kernel_span(b), support(b))
+support(b::CompactTranslationDict{T}, idx::TransIndex) where {T} = periodize_interval(value(idx)*step(b)+kernel_span(b), support(b))
 
 function periodize_interval(indomain::AbstractInterval, outdomain::AbstractInterval)
     per = (supremum(outdomain) - infimum(outdomain))
@@ -50,13 +50,13 @@ end
 
 period(::CompactTranslationDict{T}) where T = T(1)
 
-stepsize(dict::CompactTranslationDict) = period(dict)/length(dict)
+step(dict::CompactTranslationDict) = period(dict)/length(dict)
 
 unsafe_eval_element(b::CompactTranslationDict, idxn::TransIndex, x::Real) =
-    eval_kernel(b, x-idxn*stepsize(b))
+    eval_kernel(b, x-idxn*step(b))
 
 function overlapping_elements(b::CompactTranslationDict, x::Real)
-   indices = ceil(Int, (x-supremum(support(b)))/stepsize(b)):floor(Int, (x-infimum(support(b)))/stepsize(b))
+   indices = ceil(Int, (x-supremum(support(b)))/step(b)):floor(Int, (x-infimum(support(b)))/step(b))
    Set(mod(i, length(b))+1 for i in indices)
 end
 
@@ -92,7 +92,7 @@ function isperiodic_compatible_grid(b::CompactTranslationDict, grid::AbstractEqu
     l1 > l2 && ((l2,l1) = (l1, l2))
     n = l2/l1
     nInt = round(Int, n)
-    (1+(infimum(support(b)) - leftendpoint(grid))≈1) && (1+(supremum(support(b)) - rightendpoint(grid))≈1) && (n≈nInt)
+    support(b)≈support(grid) && (n≈nInt)
 end
 
 approx_length(b::CompactTranslationDict, n::Int) = ceil(Int,n/length(b))*length(b)
@@ -144,12 +144,11 @@ measure(b::CompactTranslationDict{T}) where T = FourierMeasure{T}()
 gramoperator(dict::CompactTranslationDict, measure::FourierMeasure; options...) =
     _translatescirculantoperator(dict, measure)
 
-function gramoperator(dict::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
-    if isperiodic_compatible_grid(dict, grid(measure))
-        @show Matrix(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
-        CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...))
+function gramoperator(dict::CompactTranslationDict, measure::BasisFunctions.DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill; options...)
+    if isperiodic_compatible_grid(dict, grid)
+        CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...))
     else
-        BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure; options...)
+        BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...)
     end
 end
 
