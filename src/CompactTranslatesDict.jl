@@ -1,8 +1,7 @@
 __precompile__()
 module CompactTranslatesDict
-
-using BasisFunctions, CardinalBSplines, DomainSets, FillArrays
-using LinearAlgebra, FFTW
+using Reexport, CardinalBSplines, DomainSets, FillArrays, LinearAlgebra, FFTW
+@reexport using BasisFunctions
 
 import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step
 
@@ -25,29 +24,11 @@ import BasisFunctions: instantiate, isbasis, isbiorthogonal, name, ordering
 export BSplineTranslatesBasis, DiffBSplineTranslatesBasis
 export degree, Bdiff, src, dest
 export CompactTranslatesTensorProductDict, BSplineTensorProductDict, evaluation_operator
-# Frames
-using FrameFun
-using FrameFun: BasisPlatform, FramePlatform
-import FrameFun: dictionary, oversampling_grid
-
-export BSplinePlatform, BSplineExtensionPlatform
-
-# export bspline_platform, primal, dual, sampler, A, Zt, ×
 
 
-# export ⊗
-
-# include("basisfunctions.jl")
 
 # include("operators/tensor_circulant_operator.jl")
-include("operators/sumoperator.jl")
-include("operators/ext_res_operator.jl")
 include("dictionary/translates.jl")
 include("dictionary/translates_of_bsplines.jl")
-
 include("dictionary/tensor.jl")
-include("dictionary/sum.jl")
-
-include("platform/bases.jl")
-# include("platform/diff_bspline_platform.jl")
 end

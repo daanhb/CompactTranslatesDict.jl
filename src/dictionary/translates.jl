@@ -162,31 +162,3 @@ function firstgramcolumn(dict::Dictionary, measure::Measure; T = coefficienttype
     end
     firstcolumn
 end
-
-
-
-#
-# function gramoperator(dict::CompactTranslationDict, m=measure(dict);
-#             T=coefficienttype(dict), options...)
-#     if iscompatible(dict, m)
-#         firstcolumn = zeros(T, length(dict))
-#         for (index,i) in enumerate(ordering(dict))
-#             firstcolumn[index] = innerproduct(dict, i, dict, ordering(dict)[1], m; options...)
-#         end
-#     	CirculantOperator(firstcolumn, dict, dict)
-#     else
-#         default_gramoperator(dict, m; T=T, options...)
-#     end
-# end
-#
-# function mixedgramoperator(d1::CompactTranslationDict, d2::CompactTranslationDict, measure::UniformDiracCombMeasure; options...)
-#     if iscompatible(d1, m) && iscompatible(d2, m) && length(d1) == length(d2)
-#         firstcolumn = zeros(T, length(d1))
-#         for i in ordering(d1)
-#             firstcolumn[value(i)] = innerproduct(d1, i, d2, ordering(d2)[1], m; options...)
-#         end
-#     	CirculantOperator(firstcolumn, d1, d2)
-#     else
-#         default_mixedgramoperator(d1, d2, measure; options...)
-#     end
-# end

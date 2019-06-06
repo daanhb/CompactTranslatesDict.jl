@@ -1,11 +1,8 @@
 using CompactTranslatesDict
 types = [Float64, BigFloat]
 
-include("test_sum.jl")
-include("test_banded_operators.jl")
 include("test_bsplinetranslatedbasis.jl")
 
-# include("test_diff_bspline_platform.jl")
 @testset begin
     test_bspline_orthogonality_orthonormality()
 end
