@@ -1,5 +1,4 @@
 
-
 """
 Dictionary periodic on [0,1] consisting of equispaced translates of one generating function.
 """
@@ -14,9 +13,7 @@ function eval_kernel(::CompactTranslationDict, x) end
 """
 The span of the kernel.
 """
-function kernel_span(::CompactTranslationDict) end
-
-length(dict::CompactTranslationDict) = dict.n
+function kernel_support(::CompactTranslationDict) end
 
 isbasis(::CompactTranslationDict) = true
 
@@ -31,7 +28,7 @@ support(::CompactTranslationDict{T}) where T = UnitInterval{T}()
 
 support(b::CompactTranslationDict, idx) = support(b, native_index(b, idx))
 
-support(b::CompactTranslationDict{T}, idx::TransIndex) where {T} = periodize_interval(value(idx)*step(b)+kernel_span(b), support(b))
+support(b::CompactTranslationDict{T}, idx::TransIndex) where {T} = periodize_interval(value(idx)*step(b)+kernel_support(b), support(b))
 
 function periodize_interval(indomain::AbstractInterval, outdomain::AbstractInterval)
     per = (supremum(outdomain) - infimum(outdomain))
@@ -78,15 +75,15 @@ function oversampling_grid(dict::CompactTranslationDict, L)
 end
 
 hasgrid_transform(b::CompactTranslationDict, gb, grid::AbstractEquispacedGrid) =
-    compatible_grid(b, grid)
+    compatible_translationgrid(b, grid)
 
 iscompatible(b::CompactTranslationDict, grid::AbstractEquispacedGrid) =
-    isperiodic_compatible_grid(b, grid)
+    isperiodic_compatible_translationgrid(b, grid)
 
 isdyadic(n::Integer) = (n == 2^(ndyadicscales(n)))
 ndyadicscales(n::Integer) = round(Int, log2(n))
-isperiodic_compatible_grid(b::Dictionary, grid::AbstractGrid) = false
-function isperiodic_compatible_grid(b::CompactTranslationDict, grid::AbstractEquispacedGrid)
+isperiodic_compatible_translationgrid(b::Dictionary, grid::AbstractGrid) = false
+function isperiodic_compatible_translationgrid(b::CompactTranslationDict, grid::AbstractEquispacedGrid)
     l1 = length(b)
     l2 = length(grid)
     l1 > l2 && ((l2,l1) = (l1, l2))
@@ -101,7 +98,7 @@ transform_from_grid(src, dest::CompactTranslationDict, grid; options...) =
     inv(transform_to_grid(dest, src, grid; options...))
 
 function transform_to_grid(src::CompactTranslationDict, dest, grid; options...)
-    @assert iscompatible(src, grid)
+    @assert hasgrid_transform(src, dest, grid)
     CirculantOperator(src, dest, sample(grid, x->eval_kernel(src, x)); options...)
 end
 
@@ -141,11 +138,11 @@ end
 hasmeasure(dict::CompactTranslationDict) = true
 measure(b::CompactTranslationDict{T}) where T = FourierMeasure{T}()
 
-gramoperator(dict::CompactTranslationDict, measure::FourierMeasure; options...) =
+gramoperator(dict::CompactTranslationDict, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure}; options...) =
     _translatescirculantoperator(dict, measure)
 
 function gramoperator(dict::CompactTranslationDict, measure::BasisFunctions.DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill; options...)
-    if isperiodic_compatible_grid(dict, grid)
+    if isperiodic_compatible_translationgrid(dict, grid)
         CirculantOperator(BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...))
     else
         BasisFunctions.default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...)
