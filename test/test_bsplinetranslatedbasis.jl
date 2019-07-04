@@ -34,7 +34,7 @@ function test_translatedbsplines(T)
     @test BasisFunctions.name(b) == "Periodic equispaced translates of B spline of degree 3"
 
     @test CompactTranslatesDict.compatible_interpolationgrid(b, interpolation_grid(b))
-    @test !CompactTranslatesDict.compatible_interpolationgrid(b, MidpointEquispacedGrid(n,0,1))
+    @test CompactTranslatesDict.compatible_interpolationgrid(b, MidpointEquispacedGrid(n,0,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, PeriodicEquispacedGrid(n+1,0,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, PeriodicEquispacedGrid(n,0.1,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, PeriodicEquispacedGrid(n,0,1.1))
@@ -43,7 +43,7 @@ function test_translatedbsplines(T)
     @test CompactTranslatesDict.degree(BSplineTranslatesBasis(5,2, T)) == 2
     b = BSplineTranslatesBasis(n,2,T)
     @test CompactTranslatesDict.compatible_interpolationgrid(b, interpolation_grid(b))
-    @test !CompactTranslatesDict.compatible_interpolationgrid(b, PeriodicEquispacedGrid(n,0,1))
+    @test CompactTranslatesDict.compatible_interpolationgrid(b, PeriodicEquispacedGrid(n,0,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, MidpointEquispacedGrid(n+1,0,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, MidpointEquispacedGrid(n,0.1,1))
     @test !CompactTranslatesDict.compatible_interpolationgrid(b, MidpointEquispacedGrid(n,0,1.1))

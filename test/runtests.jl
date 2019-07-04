@@ -1,11 +1,11 @@
-using CompactTranslatesDict
+using CompactTranslatesDict, BasisFunctions
 types = [Float64, BigFloat]
 
 
 
 
 
-using CompactTranslatesDict, Test, DomainSets
+using CompactTranslatesDict, BasisFunctions, Test, DomainSets
 @testset begin
     g1 = GenericTranslates(EquispacedGrid(10,0,1), exp)
     g2 = GenericEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp)

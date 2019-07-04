@@ -43,7 +43,7 @@ kernel_support(dict::Translates) = dict.kernel_support
 hasinterpolationgrid(::Translates) = true
 interpolation_grid(dict::Translates) = translationgrid(dict)
 compatible_interpolationgrid(dict::Translates, grid::AbstractGrid) =
-    compatible_translationgrid(dict, grid)
+    support(dict)≈support(grid) && compatible_translationgrid(dict, grid)
 hasmeasure(dict::Translates) = true
 measure(dict::Translates) = GenericLebesgueMeasure(support(dict))
 

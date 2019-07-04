@@ -52,6 +52,7 @@ Base.size(dict::BSplineTranslatesBasis) = (length(dict),)
 
 Base.similar(d::BSplineTranslatesBasis{S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = BSplineTranslatesBasis{T,K,SCALED}(n)
 
+kernel_support(dict::BSplineTranslatesBasis{T}) where T = DomainSets.Interval{:closed,:open}(-convert(T,degree(dict)+1)/2/length(dict),convert(T,degree(dict)+1)/2/length(dict))
 BSplineTranslatesBasis(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
     BSplineTranslatesBasis{T}(n, degree; options...)
 
