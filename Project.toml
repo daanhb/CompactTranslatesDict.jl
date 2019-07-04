@@ -1,6 +1,6 @@
 name = "CompactTranslatesDict"
 uuid = "455b6770-8cd4-11e8-0457-dd6f5558b097"
-version = "0.0.1"
+version = "0.0.2"
 
 [deps]
 BasisFunctions = "4343a256-5453-507d-8aad-01a9d7189916"
@@ -14,3 +14,6 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
