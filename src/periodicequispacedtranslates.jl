@@ -36,7 +36,7 @@ function grid_evaluation_operator(s::PeriodicEquispacedTranslates, dgs::GridBasi
     ls = length(s)
     sampling_factor, rem = divrem(lg, ls)
     if rem == 0
-        firstcolumn = sample(grid, x->eval_kernel(s, x))
+        firstcolumn = sample(grid, x->unsafe_eval_element(s, 1, x))
         a, offset = _get_array_offset(firstcolumn)
         VerticalBandedOperator(s, dgs, a, sampling_factor, offset-1; T=T)
     else
@@ -73,7 +73,7 @@ function gramoperator(dict::PeriodicEquispacedTranslates, measure::DiscreteMeasu
 end
 
 
-function gramoperator(dict::CompactTranslationDict, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure};
+function gramoperator(dict::PeriodicEquispacedTranslates, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure};
         T = coefficienttype(dict), options...)
     @assert support(dict) ≈ support(measure)
     CirculantOperator(firstgramcolumn(dict, measure; T=T, options...), dict, dict; T=T)
@@ -85,4 +85,28 @@ function firstgramcolumn(dict::Dictionary, measure::Measure; T = coefficienttype
         firstcolumn[index] = innerproduct(dict, i, dict, ordering(dict)[1], measure; options...)
     end
     firstcolumn
+end
+
+# The evaluation of the basis functions explicitly periodizes the kernel function
+# by summing over its translates.
+function unsafe_eval_element(dict::PeriodicEquispacedTranslates, idx, x)
+    T = codomaintype(dict)
+    c = translationgrid(dict)[idx]
+    per = period(dict)
+    A,B = extrema(kernel_support(dict))
+
+    z = eval_kernel(dict, x - c)
+	# Now evaluate the periodic extension. We add and subtract the period
+	# repeatedly until we are beyond the support of the kernel.
+    x1 = x + per
+    while (x1 <= c + B)
+        z += eval_kernel(dict, x1-c)
+        x1 += per
+    end
+    x2 = x - per
+    while (x2 >= c + A)
+        z += eval_kernel(dict, x2-c)
+		x2 -= per
+    end
+    z
 end

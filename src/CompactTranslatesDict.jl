@@ -2,7 +2,7 @@ __precompile__()
 module CompactTranslatesDict
 using Reexport, CardinalBSplines, DomainSets, FillArrays, LinearAlgebra, FFTW, BasisFunctions
 
-import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step
+import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step, similar
 
 # Dictionaries
 import BasisFunctions: support, name, string, strings, isperiodic, period, gramoperator,grid_evaluation_operator,
@@ -11,13 +11,14 @@ import BasisFunctions: support, name, string, strings, isperiodic, period, gramo
 
 using BasisFunctions: Measure, GenericLebesgueMeasure, default_mixedgramoperator_discretemeasure,
     DiscreteMeasure, default_gramoperator, op_eltype
+using BasisFunctions.GridArrays: similargrid
 
 
 export BSplineTranslatesBasis, DiffBSplineTranslatesBasis
 export degree, Bdiff, src, dest
 export CompactTranslatesTensorProductDict, BSplineTensorProductDict, evaluation_operator
 
-
+include("dictionary/periodic_interval.jl")
 abstract type Translates{T,S} <: Dictionary{T,S}
 end
 
@@ -34,6 +35,7 @@ Return the translation grid of a Translates `dict`.
 """
 translationgrid(dict::Translates) = dict.grid
 support(dict::Translates) = support(translationgrid(dict))
+support(dict::Translates, idx) = support(dict, native_index(dict, idx))
 size(dict::Translates) = size(translationgrid(dict))
 length(dict::Translates) = length(translationgrid(dict))
 ordering(dict::Translates) = eachindex(translationgrid(dict))
@@ -87,7 +89,7 @@ abstract type EquispacedTranslates{T,S} <: Translates{T,S}
 end
 
 compatible_translationgrid(::Type{<:EquispacedTranslates}, grid::AbstractGrid) =
-    compatible_translationgrid(Translates, grid) && step(grid) > 0
+    compatible_translationgrid(Translates, grid) && step(grid) >= 0
 step(dict::EquispacedTranslates) = step(translationgrid(dict))
 name(::EquispacedTranslates) = "Equispaced translates of a kernel function"
 
@@ -118,6 +120,12 @@ struct GenericEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
     end
 end
 
+"""
+    abstract type PeriodicEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
+
+A dictionary consisting of the equispaced translates of a periodic kernel.
+The kernel is periodized during evaluation.
+"""
 abstract type PeriodicEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
 end
 
@@ -131,6 +139,9 @@ export period
 The period of the periodic dictionary
 """
 period(dict::PeriodicEquispacedTranslates) = DomainSets.width(support(dict))
+support(dict::PeriodicEquispacedTranslates, idx) =
+	PeriodicInterval(translationgrid(dict)[idx]+kernel_support(dict), support(dict))
+
 name(::PeriodicEquispacedTranslates) = "Periodic equispaced translates of a periodic kernel function"
 include("periodicequispacedtranslates.jl")
 
@@ -161,6 +172,10 @@ struct GenericPeriodicEquispacedTranslates{T,S} <: PeriodicEquispacedTranslates{
         new{T,S}(grid, kernel, kernel_support)
     end
 end
+
+similar(dict::GenericPeriodicEquispacedTranslates{K,S}, ::Type{T}, n) where {K,S,T} =
+    GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n), dict.kernel, dict.kernel_support)
+
 
 
 include("dictionary/translates_of_bsplines.jl")
