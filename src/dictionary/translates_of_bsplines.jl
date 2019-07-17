@@ -1,9 +1,6 @@
-# translates_of_bsplines.jl
-using CardinalBSplines: evaluate_periodic_centered_BSpline, evaluate_periodic_centered_BSpline_derivative
+using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative
 abstract type DiffPeriodicBSplineBasis{T<:Real,K,D} <: PeriodicEquispacedTranslates{T,T}
 end
-
-# struct BSplineBasis{T<:Real,K,D}
 
 strings(d::DiffPeriodicBSplineBasis) = (string(d),
     ("length = $(length(d))",
@@ -11,28 +8,20 @@ strings(d::DiffPeriodicBSplineBasis) = (string(d),
      "support = $(support(d))",
      "degree = $(degree(d))"),
      )
-
-# compatible_interpolationgrid(dict::DiffPeriodicBSplineBasis, grid::AbstractEquispacedGrid) =
-#     (size(grid) == size(dict)) && (support(grid)≈support(dict)) && (iseven(degree(dict)) ?
-#         grid isa MidpointEquispacedGrid :
-#         grid isa PeriodicEquispacedGrid)
-
-support(dict::DiffPeriodicBSplineBasis) = UnitInterval{domaintype(dict)}()
-measure(dict::DiffPeriodicBSplineBasis{T}) where T = FourierMeasure{T}()
-translationgrid(dict::DiffPeriodicBSplineBasis{T}) where T = PeriodicEquispacedGrid(length(dict), zero(T),one(T))
-
-# interpolation_grid(dict::DiffPeriodicBSplineBasis) = isodd(degree(dict)) ?
-#     PeriodicEquispacedGrid(length(dict), support(dict)) :
-#     MidpointEquispacedGrid(length(dict), support(dict))
-
+support(dict::DiffPeriodicBSplineBasis) =
+    UnitInterval{domaintype(dict)}()
+measure(dict::DiffPeriodicBSplineBasis{T}) where T =
+    FourierMeasure{T}()
+translationgrid(dict::DiffPeriodicBSplineBasis{T}) where T =
+    PeriodicEquispacedGrid(length(dict), zero(T),one(T))
 hasgrid_transform(dict::DiffPeriodicBSplineBasis, _, grid::AbstractEquispacedGrid) =
     size(dict)==size(grid) && compatible_interpolationgrid(typeof(dict), grid)
-
 eval_kernel(dict::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
-    (n = length(dict); sqrt(T(n))*n^D*evaluate_periodic_centered_BSpline_derivative(Val{K}(), Val{D}(), n*x, n, T))
+    (n = length(dict); sqrt(T(n))*n^D*evaluate_centered_BSpline_derivative(Val{K}(), Val{D}(), n*x, T))
+kernel_support(dict::DiffPeriodicBSplineBasis) =
+    DomainSets.Interval{:closed,:open}(-convert(coefficienttype(dict),degree(dict)+1)/2/length(dict),convert(coefficienttype(dict),degree(dict)+1)/2/length(dict))
 
 degree(dict::DICT where DICT <: DiffPeriodicBSplineBasis{T,K} ) where {T,K} = K
-
 Bdiff(dict::DICT where DICT <: DiffPeriodicBSplineBasis{T,K,D} ) where {T,K,D} = D
 
 
@@ -51,8 +40,6 @@ Base.length(dict::BSplineTranslatesBasis) = dict.n
 Base.size(dict::BSplineTranslatesBasis) = (length(dict),)
 
 Base.similar(d::BSplineTranslatesBasis{S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = BSplineTranslatesBasis{T,K,SCALED}(n)
-
-kernel_support(dict::BSplineTranslatesBasis{T}) where T = DomainSets.Interval{:closed,:open}(-convert(T,degree(dict)+1)/2/length(dict),convert(T,degree(dict)+1)/2/length(dict))
 BSplineTranslatesBasis(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
     BSplineTranslatesBasis{T}(n, degree; options...)
 
@@ -62,9 +49,9 @@ BSplineTranslatesBasis{T,degree}(n::Int; scaled=true) where {T,degree} = BSpline
 
 
 eval_kernel(dict::BSplineTranslatesBasis{T,K,true}, x) where {K,T} =
-    (n = length(dict); sqrt(T(n))*evaluate_periodic_centered_BSpline(Val{K}(), n*x, n, T))
+    (n = length(dict); sqrt(T(n))*evaluate_centered_BSpline(Val{K}(), n*x, T))
 eval_kernel(dict::BSplineTranslatesBasis{T,K,false}, x) where {K,T} =
-    (n = length(dict); evaluate_periodic_centered_BSpline(Val{K}(), n*x, n, T))
+    (n = length(dict); evaluate_centered_BSpline(Val{K}(), n*x, T))
 
 scaled(::BSplineTranslatesBasis{T,K,SCALED}) where {T,K,SCALED} = SCALED
 

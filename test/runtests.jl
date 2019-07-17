@@ -1,4 +1,4 @@
-using CompactTranslatesDict, BasisFunctions
+using CompactTranslatesDict, BasisFunctions, DomainSets
 types = [Float64, BigFloat]
 
 
@@ -9,7 +9,7 @@ using CompactTranslatesDict, BasisFunctions, Test, DomainSets
 @testset begin
     g1 = GenericTranslates(EquispacedGrid(10,0,1), exp)
     g2 = GenericEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp)
-    g3 = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp)
+    g3 = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp, Interval(0,.5))
     for g in (g1,g2,g3)
         @test support(g) ≈ UnitInterval()
     end
@@ -36,7 +36,7 @@ for T in types
 end
 
 @testset "gramoperator" begin
-    B = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,2π), cos)
+    B = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,2π), cos, Interval(0.,.4))
     μ = grid(discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
     g1 = gramoperator(B, discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
     g2 = BasisFunctions.default_gramoperator(B, discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
