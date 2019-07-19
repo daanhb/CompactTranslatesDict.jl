@@ -7,7 +7,7 @@ import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step, sim
 # Dictionaries
 import BasisFunctions: support, name, string, strings, isperiodic, period, gramoperator,grid_evaluation_operator,
     transform_from_grid, hasgrid_transform, ordering, measure, unsafe_eval_element, hasmeasure, interpolation_grid,
-    hasinterpolationgrid, extension_operator, restriction_operator, instantiate, resize
+    hasinterpolationgrid, extension_operator, restriction_operator, instantiate, resize, rescale
 
 using BasisFunctions: Measure, GenericLebesgueMeasure, default_mixedgramoperator_discretemeasure,
     DiscreteMeasure, default_gramoperator, op_eltype
@@ -176,7 +176,12 @@ end
 similar(dict::GenericPeriodicEquispacedTranslates{K,S}, ::Type{T}, n) where {K,S,T} =
     GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n), dict.kernel, dict.kernel_support)
 
-
+function rescale(dict::PeriodicEquispacedTranslates, a, b)
+    map = interval_map(extrema(support(dict))...,   a, b)
+    GenericPeriodicEquispacedTranslates(mapped_grid(translationgrid(dict),map),
+        x->eval_kernel(dict, inv(map)*x),
+        map*kernel_support(dict))
+end
 
 include("dictionary/translates_of_bsplines.jl")
 include("dictionary/tensor.jl")

@@ -46,7 +46,10 @@ BSplineTranslatesBasis(n::Int, degree::Int, ::Type{T} = Float64; options...) whe
 BSplineTranslatesBasis{T}(n::Int, degree::Int; options...) where {T} = BSplineTranslatesBasis{T,degree}(n; options...)
 BSplineTranslatesBasis{T,degree}(n::Int; scaled=true) where {T,degree} = BSplineTranslatesBasis{T,degree,scaled}(n)
 
-
+function BSplineTranslatesBasis(n::Int, degree::Int, a::T, b::T, ::Type{S}=T; options...) where {T,S}
+    Q = promote_type(T, S, typeof(a/b))
+    rescale(BSplineTranslatesBasis{Q}(n, degree;options...), Q(a), Q(b))
+end
 
 eval_kernel(dict::BSplineTranslatesBasis{T,K,true}, x) where {K,T} =
     (n = length(dict); sqrt(T(n))*evaluate_centered_BSpline(Val{K}(), n*x, T))
