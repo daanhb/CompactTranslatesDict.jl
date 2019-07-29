@@ -1,4 +1,5 @@
-using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative
+using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative,
+    evaluate_centered_gauss_BSpline
 abstract type DiffPeriodicBSplineBasis{T<:Real,K,D} <: PeriodicEquispacedTranslates{T,T}
 end
 
@@ -28,68 +29,95 @@ Bdiff(dict::DICT where DICT <: DiffPeriodicBSplineBasis{T,K,D} ) where {T,K,D} =
 abstract type PeriodicBSplineBasis{T,K} <: DiffPeriodicBSplineBasis{T,K,0}
 end
 
-"""
+Base.length(dict::PeriodicBSplineBasis) = dict.n
+Base.size(dict::PeriodicBSplineBasis) = (length(dict),)
+
+for (TYPE,fun) in zip(
+        (:BSplineTranslatesBasis, :GaussTranslatesBasis),
+        (:evaluate_centered_BSpline, :evaluate_centered_gauss_BSpline)
+    )
+    @eval begin
+
+        struct $(TYPE){T,K,SCALED} <: PeriodicBSplineBasis{T,K}
+            n               :: Int
+        end
+
+        Base.similar(d::$(TYPE){S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = $(TYPE){T,K,SCALED}(n)
+        $(TYPE)(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
+            $(TYPE){T}(n, degree; options...)
+
+        $(TYPE){T}(n::Int, degree::Int; options...) where {T} = $(TYPE){T,degree}(n; options...)
+        $(TYPE){T,degree}(n::Int; scaled=true) where {T,degree} = $(TYPE){T,degree,scaled}(n)
+
+        function $(TYPE)(n::Int, degree::Int, a::T, b::T, ::Type{S}=T; options...) where {T,S}
+            Q = promote_type(T, S, typeof(a/b))
+            rescale($(TYPE){Q}(n, degree;options...), Q(a), Q(b))
+        end
+
+        eval_kernel(dict::$(TYPE){T,K,true}, x) where {K,T} =
+            (n = length(dict); sqrt(T(n))*$(fun)(Val{K}(), n*x, T))
+        eval_kernel(dict::$(TYPE){T,K,false}, x) where {K,T} =
+            (n = length(dict); $(fun)(Val{K}(), n*x, T))
+
+        scaled(::$(TYPE){T,K,SCALED}) where {T,K,SCALED} = SCALED
+
+        ==(dict1::$(TYPE){T1,K1}, dict2::$(TYPE){T2,K2}) where {K1,K2,T1,T2} = T1==T2 && K1==K2 && length(dict1)==length(dict2)
+
+        instantiate(::Type{$(TYPE)}, n::Int, ::Type{T}) where {T} = $(TYPE){T}(n,3)
+
+        resize(dict::$(TYPE){T}, n::Int) where {T} = $(TYPE){T,degree(dict)}(n)
+
+        innerproduct_native(d1::$(TYPE), i, d2::$(TYPE), j, measure::FourierMeasure; warnslow=false, options...)  =
+             BasisFunctions.default_dict_innerproduct(d1, i, d2, j, measure; warnslow=warnslow, options...)
+
+        function firstgramcolumn(dict::$(TYPE), measure::FourierMeasure; T=coefficienttype(s, domaintype(measure)), options...)
+            firstcolumn = zeros(T, length(dict))
+            for i in 1:length(dict)
+                firstcolumn[i] = firstgramcolumnelement(dict, measure, i; T=T, options...)
+            end
+            firstcolumn
+        end
+
+
+        @inline function firstgramcolumnelement(dict::$(TYPE){S,K,SCALED}, measure::FourierMeasure, i::Int; T=coefficienttype(s), options...) where {S,K,SCALED}
+            if length(dict) <= 2K+1
+                return convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
+            end
+            r = CardinalBSplines.shifted_spline_integral(K, abs(i - 1))
+            r += CardinalBSplines.shifted_spline_integral(K, length(dict)-abs(i - 1))
+            if SCALED
+                convert(T,r)
+            else
+                convert(T,r)/convert(T,length(dict))
+            end
+        end
+    end
+end
+
+export BSplineTranslatesBasis, GaussTranslatesBasis
+@doc """
   Basis consisting of dilated, translated, and periodized cardinal B splines on the interval [0,1].
 """
-struct BSplineTranslatesBasis{T,K,SCALED} <: PeriodicBSplineBasis{T,K}
-    n               :: Int
-end
+BSplineTranslatesBasis
 
-
-Base.length(dict::BSplineTranslatesBasis) = dict.n
-Base.size(dict::BSplineTranslatesBasis) = (length(dict),)
-
-Base.similar(d::BSplineTranslatesBasis{S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = BSplineTranslatesBasis{T,K,SCALED}(n)
-BSplineTranslatesBasis(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
-    BSplineTranslatesBasis{T}(n, degree; options...)
-
-BSplineTranslatesBasis{T}(n::Int, degree::Int; options...) where {T} = BSplineTranslatesBasis{T,degree}(n; options...)
-BSplineTranslatesBasis{T,degree}(n::Int; scaled=true) where {T,degree} = BSplineTranslatesBasis{T,degree,scaled}(n)
-
-function BSplineTranslatesBasis(n::Int, degree::Int, a::T, b::T, ::Type{S}=T; options...) where {T,S}
-    Q = promote_type(T, S, typeof(a/b))
-    rescale(BSplineTranslatesBasis{Q}(n, degree;options...), Q(a), Q(b))
-end
-
-eval_kernel(dict::BSplineTranslatesBasis{T,K,true}, x) where {K,T} =
-    (n = length(dict); sqrt(T(n))*evaluate_centered_BSpline(Val{K}(), n*x, T))
-eval_kernel(dict::BSplineTranslatesBasis{T,K,false}, x) where {K,T} =
-    (n = length(dict); evaluate_centered_BSpline(Val{K}(), n*x, T))
-
-scaled(::BSplineTranslatesBasis{T,K,SCALED}) where {T,K,SCALED} = SCALED
+@doc """
+  Basis consisting of dilated, translated, and periodized gauss clocks similar to cardinal B splines on the interval [0,1].
+"""
+GaussTranslatesBasis
 
 name(dict::BSplineTranslatesBasis) = "Periodic equispaced translates of B spline of degree $(degree(dict))"
+name(dict::GaussTranslatesBasis) = "Periodic equispaced translates of gaussians similar to B spline of degree $(degree(dict))"
 
-==(dict1::BSplineTranslatesBasis{T1,K1}, dict2::BSplineTranslatesBasis{T2,K2}) where {K1,K2,T1,T2} = T1==T2 && K1==K2 && length(dict1)==length(dict2)
+kernel_support(dict::GaussTranslatesBasis{T}, threshold = eps(T)) where T =
+    approximate_support(dict, threshold)
 
-instantiate(::Type{BSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = BSplineTranslatesBasis{T}(n,3)
-
-resize(dict::BSplineTranslatesBasis{T}, n::Int) where {T} = BSplineTranslatesBasis{T,degree(dict)}(n)
-
-innerproduct_native(d1::BSplineTranslatesBasis, i, d2::BSplineTranslatesBasis, j, measure::FourierMeasure; warnslow=false, options...)  =
-     BasisFunctions.default_dict_innerproduct(d1, i, d2, j, measure; warnslow=warnslow, options...)
-
-function firstgramcolumn(dict::BSplineTranslatesBasis, measure::FourierMeasure; T=coefficienttype(s, domaintype(measure)), options...)
-    firstcolumn = zeros(T, length(dict))
-    for i in 1:length(dict)
-        firstcolumn[i] = firstgramcolumnelement(dict, measure, i; T=T, options...)
-    end
-    firstcolumn
+function approximate_support(dict::GaussTranslatesBasis{T}, threshold = eps(T)) where {T}
+    a = scaled(dict) ?
+        sqrt(-log(threshold*sqrt(T(degree(dict))/6/length(dict)))*T(degree(dict)+1)/6 )/length(dict) :
+        sqrt(-log(threshold*sqrt(T(degree(dict))/6             ))*T(degree(dict)+1)/6 )/length(dict)
+    -a..a
 end
 
-
-@inline function firstgramcolumnelement(dict::BSplineTranslatesBasis{S,K,SCALED}, measure::FourierMeasure, i::Int; T=coefficienttype(s), options...) where {S,K,SCALED}
-    if length(dict) <= 2K+1
-        return convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
-    end
-    r = CardinalBSplines.shifted_spline_integral(K, abs(i - 1))
-    r += CardinalBSplines.shifted_spline_integral(K, length(dict)-abs(i - 1))
-    if SCALED
-        convert(T,r)
-    else
-        convert(T,r)/convert(T,length(dict))
-    end
-end
 
 """
   Basis consisting of differentiated dilated, translated, and periodized cardinal B splines on the interval [0,1].
