@@ -1,6 +1,6 @@
 using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative,
     evaluate_centered_gauss_BSpline
-abstract type DiffPeriodicBSplineBasis{T<:Real,K,D} <: PeriodicEquispacedTranslates{T,T}
+abstract type DiffPeriodicBSplineBasis{T<:Real,K,D} <: PeriodicEquispacedTranslates{T,T,:sum}
 end
 
 strings(d::DiffPeriodicBSplineBasis) = (string(d),
