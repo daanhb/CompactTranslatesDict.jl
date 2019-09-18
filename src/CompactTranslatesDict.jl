@@ -186,6 +186,5 @@ function rescale(dict::PeriodicEquispacedTranslates, a, b)
 end
 
 include("dictionary/translates_of_bsplines.jl")
-include("dictionary/bsplinebasis.jl")
 include("dictionary/tensor.jl")
 end
