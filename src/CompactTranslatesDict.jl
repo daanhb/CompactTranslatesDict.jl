@@ -37,7 +37,7 @@ Return the translation grid of a Translates `dict`.
 """
 translationgrid(dict::Translates) = dict.grid
 support(dict::Translates) = support(translationgrid(dict))
-support(dict::Translates, idx) = support(dict, native_index(dict, idx))
+support(dict::Translates, idx) = support(dict)
 size(dict::Translates) = size(translationgrid(dict))
 length(dict::Translates) = length(translationgrid(dict))
 ordering(dict::Translates) = eachindex(translationgrid(dict))
@@ -74,15 +74,15 @@ GenericTranslates
     ↳ support = 0.0..1.0
 ```
 """
-struct GenericTranslates{T,S} <: Translates{T,S}
-    grid::AbstractGrid
-    kernel
-    kernel_support::Domain
+struct GenericTranslates{T,S,GRID<:AbstractGrid,DOMAIN<:Domain,KERN} <: Translates{T,S}
+    grid::GRID
+    kernel::KERN
+    kernel_support::DOMAIN
     function GenericTranslates(grid, kernel, kernel_support=DomainSets.FullSpace{typeof(first(grid))}())
         T = eltype(grid)
         S = typeof(kernel(first(grid)))
         @assert compatible_translationgrid(GenericTranslates, grid)
-        new{T,S}(grid, kernel, kernel_support)
+        new{T,S,typeof(grid),typeof(kernel_support),typeof(kernel)}(grid, kernel, kernel_support)
     end
 end
 
@@ -110,25 +110,25 @@ GenericEquispacedTranslates
     ↳ support = 0.0..1.0
 ```
 """
-struct GenericEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
-    grid::AbstractGrid
-    kernel
-    kernel_support::Domain
+struct GenericEquispacedTranslates{T,S,GRID<:AbstractGrid,DOMAIN<:Domain,KERN} <: EquispacedTranslates{T,S}
+    grid::GRID
+    kernel::KERN
+    kernel_support::DOMAIN
     function GenericEquispacedTranslates(grid, kernel, kernel_support=DomainSets.FullSpace{typeof(first(grid))}())
         T = eltype(grid)
         S = typeof(kernel(first(grid)))
         @assert compatible_translationgrid(GenericEquispacedTranslates, grid)
-        new{T,S}(grid, kernel, kernel_support)
+        new{T,S,typeof(grid),typeof(kernel_support),typeof(kernel)}(grid, kernel, kernel_support)
     end
 end
 
 """
-    abstract type PeriodicEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
+    abstract type PeriodicEquispacedTranslates{T,S,PERIODIZATION} <: EquispacedTranslates{T,S}
 
 A dictionary consisting of the equispaced translates of a periodic kernel.
 The kernel is periodized during evaluation.
 """
-abstract type PeriodicEquispacedTranslates{T,S} <: EquispacedTranslates{T,S}
+abstract type PeriodicEquispacedTranslates{T,S,PERIODIZATION} <: EquispacedTranslates{T,S}
 end
 
 compatible_translationgrid(::Type{<:PeriodicEquispacedTranslates}, grid::AbstractGrid) =
@@ -150,7 +150,7 @@ include("periodicequispacedtranslates.jl")
 
 export GenericPeriodicEquispacedTranslates
 """
-struct GenericPeriodicEquispacedTranslates{T,S} <: Translates{T,S}
+struct GenericPeriodicEquispacedTranslates{T,S,PERIODIZATION} <: PeriodicEquispacedTranslates{T,S,PERIODIZATION}
 
 A `Translates` with a general periodic equispaced grid and periodic kernel
 
@@ -163,20 +163,20 @@ GenericPeriodicEquispacedTranslates
     ↳ support = 0.0..6.283185307179586
 ```
 """
-struct GenericPeriodicEquispacedTranslates{T,S} <: PeriodicEquispacedTranslates{T,S}
-    grid::AbstractGrid
-    kernel
-    kernel_support::Domain
-    function GenericPeriodicEquispacedTranslates(grid, kernel, kernel_support=DomainSets.FullSpace{typeof(first(grid))}())
+struct GenericPeriodicEquispacedTranslates{T,S,PERIODIZATION,GRID<:AbstractGrid,DOMAIN<:Domain,KERN} <: PeriodicEquispacedTranslates{T,S,PERIODIZATION}
+    grid::GRID
+    kernel::KERN
+    kernel_support::DOMAIN
+    function GenericPeriodicEquispacedTranslates(grid, kernel, kernel_support=DomainSets.FullSpace{typeof(first(grid))}(),periodization=:sum)
         T = eltype(grid)
         S = typeof(kernel(first(grid)))
         @assert compatible_translationgrid(GenericPeriodicEquispacedTranslates, grid)
-        new{T,S}(grid, kernel, kernel_support)
+        new{T,S,periodization,typeof(grid),typeof(kernel_support),typeof(kernel)}(grid, kernel, kernel_support)
     end
 end
 
-similar(dict::GenericPeriodicEquispacedTranslates{K,S}, ::Type{T}, n) where {K,S,T} =
-    GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n), dict.kernel, dict.kernel_support)
+similar(dict::GenericPeriodicEquispacedTranslates{K,S,PERIODIZATION}, ::Type{T}, n) where {K,S,T,PERIODIZATION} =
+    GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n), dict.kernel, dict.kernel_support,PERIODIZATION)
 
 function rescale(dict::PeriodicEquispacedTranslates, a, b)
     map = interval_map(extrema(support(dict))...,   a, b)
@@ -186,5 +186,6 @@ function rescale(dict::PeriodicEquispacedTranslates, a, b)
 end
 
 include("dictionary/translates_of_bsplines.jl")
+include("dictionary/bsplinebasis.jl")
 include("dictionary/tensor.jl")
 end

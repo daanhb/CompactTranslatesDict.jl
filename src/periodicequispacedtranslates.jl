@@ -89,8 +89,7 @@ end
 
 # The evaluation of the basis functions explicitly periodizes the kernel function
 # by summing over its translates.
-function unsafe_eval_element(dict::PeriodicEquispacedTranslates, idx, x)
-    T = codomaintype(dict)
+function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:sum}, idx, x) where {T,S}
     c = translationgrid(dict)[idx]
     per = period(dict)
     A,B = extrema(kernel_support(dict))
@@ -109,4 +108,19 @@ function unsafe_eval_element(dict::PeriodicEquispacedTranslates, idx, x)
 		x2 -= per
     end
     z
+end
+
+unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,PERIODIZATION}) where {T,S,PERIODIZATION} =
+    error("Periodization $PERIODIZATION not known.")
+
+function LinearAlgebra.norm(dict::PeriodicEquispacedTranslates{T,S,:norm}, x, y) where {T,S}
+    per = period(dict)
+    ELT = typeof(per)
+    # r = max(abs.(extrema(kernel_support(dict)))...)
+    # t = r^2/(1-cos(2ELT(pi)/per*r))
+    sqrt((1-cos(2ELT(pi)/per*(x - y))))
+end
+function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:norm}, idx, x) where {T,S}
+    c = translationgrid(dict)[idx]
+    z = eval_kernel(dict, norm(dict, x, c))
 end
