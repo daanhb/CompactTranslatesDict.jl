@@ -9,6 +9,7 @@ strings(d::DiffPeriodicBSplineBasis) = (string(d),
      "support = $(support(d))",
      "degree = $(degree(d))"),
      )
+
 support(dict::DiffPeriodicBSplineBasis) =
     UnitInterval{domaintype(dict)}()
 measure(dict::DiffPeriodicBSplineBasis{T}) where T =

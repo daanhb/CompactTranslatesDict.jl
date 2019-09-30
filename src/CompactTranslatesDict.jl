@@ -1,7 +1,8 @@
 __precompile__()
 module CompactTranslatesDict
 using Reexport, CardinalBSplines, DomainSets, FillArrays, LinearAlgebra, FFTW, BasisFunctions
-import InfiniteVectors: string, InfiniteVector
+import InfiniteVectors: string, InfiniteVector,Integers
+string(::Integers) = "𝐙"
 string(v::InfiniteVector) = (io=IOBuffer();Base.show_vector(io, v);String(read!(io)))
 
 import Base: ==, getindex, length, size, unsafe_getindex, checkbounds, step, similar

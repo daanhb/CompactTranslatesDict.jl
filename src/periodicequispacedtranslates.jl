@@ -36,12 +36,15 @@ function grid_evaluation_operator(s::PeriodicEquispacedTranslates, dgs::GridBasi
     ls = length(s)
     sampling_factor, rem = divrem(lg, ls)
     if rem == 0
-        firstcolumn = sample(grid, x->unsafe_eval_element(s, 1, x))
+        firstcolumn = sample(grid, x->(unsafe_eval_element(s, 1, x)))
+        firstcolumn = convert.(T, firstcolumn)
         a, offset = _get_array_offset(firstcolumn)
         VerticalBandedOperator(s, dgs, a, sampling_factor, offset-1; T=T)
     else
         @debug "slow evaluation operator"
-        BasisFunctions.dense_evaluation_operator(s, dgs; options...)
+        # Not type stable if we allow this branch
+        # BasisFunctions.dense_evaluation_operator(s, dgs; options...)
+        error("Not type stable if we allow this branch")
     end
 end
 
