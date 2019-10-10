@@ -29,6 +29,7 @@ function transform_to_grid(src::PeriodicEquispacedTranslates, dest, grid::Abstra
     @assert hasgrid_transform(src, dest, grid)
     CirculantOperator(src, dest, sample(grid, x->eval_kernel(src, x)); options...)
 end
+using BasisFunctions: VerticalBandedMatrix
 
 function grid_evaluation_operator(s::PeriodicEquispacedTranslates, dgs::GridBasis, grid::AbstractEquispacedGrid;
             T=op_eltype(s, dgs), options...)
@@ -39,7 +40,9 @@ function grid_evaluation_operator(s::PeriodicEquispacedTranslates, dgs::GridBasi
         firstcolumn = sample(grid, x->(unsafe_eval_element(s, 1, x)))
         firstcolumn = convert.(T, firstcolumn)
         a, offset = _get_array_offset(firstcolumn)
-        VerticalBandedOperator(s, dgs, a, sampling_factor, offset-1; T=T)
+        M = VerticalBandedMatrix{T}(length(dgs), length(s), a, sampling_factor, offset-1)
+        ArrayOperator(M, s, dgs)
+        # VerticalBandedOperator(s, dgs, a, sampling_factor, offset-1; T=T)
     else
         @debug "slow evaluation operator"
         # Not type stable if we allow this branch
