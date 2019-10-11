@@ -46,8 +46,8 @@ function grid_evaluation_operator(s::PeriodicEquispacedTranslates, dgs::GridBasi
     else
         @debug "slow evaluation operator"
         # Not type stable if we allow this branch
-        # BasisFunctions.dense_evaluation_operator(s, dgs; options...)
-        error("Not type stable if we allow this branch")
+        BasisFunctions.dense_evaluation_operator(s, dgs; options...)
+        # error("Not type stable if we allow this branch")
     end
 end
 
