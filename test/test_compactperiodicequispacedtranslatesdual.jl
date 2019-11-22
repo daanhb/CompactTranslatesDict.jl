@@ -1,6 +1,6 @@
 
 
-using Test, BasisFunctions, DomainSets, CompactTranslatesDict
+using Test, BasisFunctions, DomainSets, CompactTranslatesDict, CardinalBSplines
 using GridArrays: similargrid
 
 N = 10
