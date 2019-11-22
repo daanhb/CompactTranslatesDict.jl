@@ -6,6 +6,7 @@ types = [Float64, BigFloat]
 
 
 using CompactTranslatesDict, BasisFunctions, Test, DomainSets
+using BasisFunctions: period, isperiodic
 @testset begin
     g1 = GenericTranslates(EquispacedGrid(10,0,1), exp)
     g2 = GenericEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp)
@@ -58,4 +59,7 @@ end
     @test BasisFunctions.hasinterpolationgrid(B) ≈ hasinterpolationgrid(B)
 end
 
-# include("test_platform.jl")
+using Test
+@testset "Compact Duals" begin
+    include("test_compactperiodicequispacedtranslatesdual.jl")
+end

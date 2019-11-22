@@ -1,5 +1,17 @@
+module DiffPeriodicBSplineBases
+
+using ..TranslatesDictionaries, BasisFunctions, DomainSets, GridArrays, ..PeriodicEquispacedTranslatesDicts
+
 using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative,
-    evaluate_centered_gauss_BSpline
+    evaluate_centered_gauss_BSpline, shifted_spline_integral
+
+import BasisFunctions: strings, support, measure, size, hasgrid_transform, length, similar,
+    instantiate, resize, innerproduct_native, name
+import ..TranslatesDictionaries: translationgrid, eval_kernel, kernel_support
+import ..PeriodicEquispacedTranslatesDicts: firstgramcolumn
+import Base: ==
+
+
 abstract type DiffPeriodicBSplineBasis{T<:Real,K,D} <: PeriodicEquispacedTranslates{T,T,:sum}
 end
 
@@ -23,15 +35,20 @@ eval_kernel(dict::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,
 kernel_support(dict::DiffPeriodicBSplineBasis) =
     DomainSets.Interval{:closed,:open}(-convert(coefficienttype(dict),degree(dict)+1)/2/length(dict),convert(coefficienttype(dict),degree(dict)+1)/2/length(dict))
 
+export degree
 degree(dict::DICT where DICT <: DiffPeriodicBSplineBasis{T,K} ) where {T,K} = K
+export Bdiff
 Bdiff(dict::DICT where DICT <: DiffPeriodicBSplineBasis{T,K,D} ) where {T,K,D} = D
 
-
+export PeriodicBSplineBasis
+"""
+    abstract type PeriodicBSplineBasis{T,K} <: DiffPeriodicBSplineBasis{T,K,0}
+"""
 abstract type PeriodicBSplineBasis{T,K} <: DiffPeriodicBSplineBasis{T,K,0}
 end
 
-Base.length(dict::PeriodicBSplineBasis) = dict.n
-Base.size(dict::PeriodicBSplineBasis) = (length(dict),)
+length(dict::PeriodicBSplineBasis) = dict.n
+size(dict::PeriodicBSplineBasis) = (length(dict),)
 
 for (TYPE,fun) in zip(
         (:BSplineTranslatesBasis, :GaussTranslatesBasis),
@@ -43,7 +60,7 @@ for (TYPE,fun) in zip(
             n               :: Int
         end
 
-        Base.similar(d::$(TYPE){S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = $(TYPE){T,K,SCALED}(n)
+        similar(d::$(TYPE){S,K,SCALED}, ::Type{T}, n::Int) where {S,T,K,SCALED} = $(TYPE){T,K,SCALED}(n)
         $(TYPE)(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
             $(TYPE){T}(n, degree; options...)
 
@@ -84,8 +101,8 @@ for (TYPE,fun) in zip(
             if length(dict) <= 2K+1
                 return convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
             end
-            r = CardinalBSplines.shifted_spline_integral(K, abs(i - 1))
-            r += CardinalBSplines.shifted_spline_integral(K, length(dict)-abs(i - 1))
+            r = shifted_spline_integral(K, abs(i - 1))
+            r += shifted_spline_integral(K, length(dict)-abs(i - 1))
             if SCALED
                 convert(T,r)
             else
@@ -112,25 +129,36 @@ name(dict::GaussTranslatesBasis) = "Periodic equispaced translates of gaussians 
 kernel_support(dict::GaussTranslatesBasis{T}, threshold = eps(T)) where T =
     approximate_support(dict, threshold)
 
-function approximate_support(dict::GaussTranslatesBasis{T}, threshold = eps(T)) where {T}
+export approximate_kernel_support
+"""
+    approximate_kernel_support(dict::Translates, threshold = eps(T))
+
+The support where a kernel is larger than a threshold
+"""
+function approximate_kernel_support(dict::GaussTranslatesBasis{T}, threshold = eps(T)) where {T}
     a = scaled(dict) ?
         sqrt(-log(threshold*sqrt(T(degree(dict))/6/length(dict)))*T(degree(dict)+1)/6 )/length(dict) :
         sqrt(-log(threshold*sqrt(T(degree(dict))/6             ))*T(degree(dict)+1)/6 )/length(dict)
     -a..a
 end
 
+approximate_kernel_support(dict::Translates, threshold = eps(T)) where {T} =
+    kernel_support(dict)
 
+export DiffBSplineTranslatesBasis
 """
-  Basis consisting of differentiated dilated, translated, and periodized cardinal B splines on the interval [0,1].
+    struct DiffBSplineTranslatesBasis{T,K,D} <: DiffPeriodicBSplineBasis{T,K,D}
+
+Basis consisting of differentiated dilated, translated, and periodized cardinal B splines on the interval [0,1].
 """
 struct DiffBSplineTranslatesBasis{T,K,D} <: DiffPeriodicBSplineBasis{T,K,D}
     n               :: Int
 end
 
-Base.length(dict::DiffBSplineTranslatesBasis) = dict.n
-Base.size(dict::DiffBSplineTranslatesBasis) = (length(dict),)
+length(dict::DiffBSplineTranslatesBasis) = dict.n
+size(dict::DiffBSplineTranslatesBasis) = (length(dict),)
 
-Base.similar(d::DiffBSplineTranslatesBasis{S,K,D}, ::Type{T}, n::Int) where {S,T,K,D} =
+similar(d::DiffBSplineTranslatesBasis{S,K,D}, ::Type{T}, n::Int) where {S,T,K,D} =
     DiffBSplineTranslatesBasis{T,K,D}(n)
 
 
@@ -144,3 +172,19 @@ DiffBSplineTranslatesBasis{T,degree}(n::Int; D=0) where {T,degree} = DiffBSpline
 instantiate(::Type{DiffBSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = DiffBSplineTranslatesBasis(n,3,1,T)
 
 resize(dict::DiffBSplineTranslatesBasis, n::Int) = DiffBSplineTranslatesBasis(n, degree(dict), Bdiff(dict), codomaintype(dict))
+
+
+export CompactTranslatesTensorProductDict, BSplineTensorProductDict
+const CompactTranslatesTensorProductDict{N,TUPLE,S,T} = BasisFunctions.TensorProductDict{N,TUPLE,S,T} where {N,TUPLE<: Tuple{Vararg{CompactTranslationDict}},S,T}
+const BSplineTensorProductDict{N,TUPLE,S,T} = BasisFunctions.TensorProductDict{N,TUPLE,S,T} where {N,TUPLE<: Tuple{Vararg{DiffPeriodicBSplineBasis}},S,T}
+
+degree(T::BSplineTensorProductDict) = map(degree, elements(T))
+Bdiff(T::BSplineTensorProductDict) = map(Bdiff, elements(T))
+
+grid_evaluation_operator(s::CompactTranslatesTensorProductDict, dgs::GridBasis, grid::ProductGrid; options...) =
+    tensorproduct([grid_evaluation_operator(si, dgsi, gi; options...) for (si, dgsi, gi) in zip(elements(s), elements(dgs), elements(grid))]...)
+
+tensor_product_dict(size::NTuple{N,Int}, degree::NTuple{N,Int}, diff::NTuple{N,Int}=ntuple(k->0,Val(N)),::Type{T}=Float64) where {N,T} =
+    TensorProductDict([DiffBSplineTranslatesBasis(size[i], degree[i], diff[i], T) for i in 1:length(size)]...)
+
+end

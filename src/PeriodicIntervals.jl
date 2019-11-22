@@ -1,4 +1,9 @@
+module PeriodicIntervals
+using DomainSets
 
+export PeriodicInterval
+
+import DomainSets: indomain, approx_indomain, infimum, supremum
 """
 For two given intervals `[a,b]` and `[A,B]`, a periodic interval represents
 the intersection of `[A,B]` with the periodic repetition of `[a,b]` with period
@@ -17,7 +22,7 @@ end
 PeriodicInterval(subdomain::AbstractInterval{T}, periodicdomain::AbstractInterval{T}) where {T} =
     PeriodicInterval{typeof(subdomain),typeof(periodicdomain),T}(subdomain, periodicdomain)
 
-DomainSets.indomain(x, d::PeriodicInterval) = _indomain(x, d, d.subdomain, d.periodicdomain)
+indomain(x, d::PeriodicInterval) = _indomain(x, d, d.subdomain, d.periodicdomain)
 
 function _indomain(x, d::PeriodicInterval, subdomain::AbstractInterval, periodicdomain::AbstractInterval)
     if x ∉ periodicdomain
@@ -70,8 +75,9 @@ end
 function infimum(d::PeriodicInterval)
     a, b = extrema(d.subdomain)
     A, B = extrema(d.periodicdomain)
-    a1 = A + mod(a-A,B-A)
-    b1 = A + mod(b-A,B-A)
+    b-a >= B-A  && return A
+    a1 = a ∈ d.periodicdomain ? a : A + mod(a-A,B-A)
+    b1 = b ∈ d.periodicdomain ? b : A + mod(b-A,B-A)
     if b1 > a1
         a1
     else
@@ -79,14 +85,17 @@ function infimum(d::PeriodicInterval)
     end
 end
 
-function extremum(d::PeriodicInterval)
+function supremum(d::PeriodicInterval)
     a, b = extrema(d.subdomain)
     A, B = extrema(d.periodicdomain)
-    a1 = A + mod(a-A,B-A)
-    b1 = A + mod(b-A,B-A)
+    b-a >= B-A  && return B
+    a1 = a ∈ d.periodicdomain ? a : A + mod(a-A,B-A)
+    b1 = b ∈ d.periodicdomain ? b : A + mod(b-A,B-A)
     if b1 > a1
         b1
     else
         B
     end
+end
+
 end
