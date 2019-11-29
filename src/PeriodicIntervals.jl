@@ -1,5 +1,5 @@
 module PeriodicIntervals
-using DomainSets, BasisFunctions, IntervalSets
+using DomainSets, BasisFunctions
 
 using DomainSets: width
 
