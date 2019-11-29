@@ -1,17 +1,6 @@
 module CompactInfiniteVectors
 
-using BasisFunctions, GridArrays
-
-using InfiniteVectors: CompactInfiniteVector, _firstindex, _lastindex
-
-import BasisFunctions: support
-
-support(vecs::NTuple{N,CompactInfiniteVector}) where N =
-    CartesianIndex(map(_firstindex, vecs)):CartesianIndex(map(_lastindex, vecs))
-
-support(vec::CompactInfiniteVector) =
-    CartesianIndex(_firstindex(vec)):CartesianIndex(_lastindex(vec))
-
+using BasisFunctions, GridArrays, InfiniteVectors
 export compactinfinitevector
 """
     compactinfinitevector(dict::Dictionary, grid::AbstractGrid)
@@ -34,8 +23,8 @@ julia> @test vv ≈ evaluation_matrix(dict[1], g)
 Test Passed
 ```
 """
-compactinfinitevector(dict::TensorProductDict, grid::ProductGrid) = map(compactinfinitevector, elements(dict), elements(grid))
 function compactinfinitevector(dict::Dictionary{T}, grid::AbstractEquispacedGrid) where {T}
+    @assert rem(length(grid),length(dict)) == 0
     A = evaluation_operator(dict, grid)
     @assert A isa VerticalBandedOperator
     a = convert(Vector{T}, A.A.array)

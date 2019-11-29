@@ -1,101 +1,131 @@
 module PeriodicIntervals
-using DomainSets
+using DomainSets, BasisFunctions
+
+import DomainSets: indomain, approx_indomain, infimum, supremum, elements, numelements,
+    element
+import BasisFunctions: iscomposite, period
 
 export PeriodicInterval
-
-import DomainSets: indomain, approx_indomain, infimum, supremum
 """
-For two given intervals `[a,b]` and `[A,B]`, a periodic interval represents
-the intersection of `[A,B]` with the periodic repetition of `[a,b]` with period
-`B-A`:
+For two given intervals `[a,b]` and `[A,B]`, a periodic subinterval represents
+the intersection of the closed interval `[A,B]` with the periodic repetition of
+the closed interval `[a,b]` with period `B-A`:
 
-`[a +k*(B-A),b+k*(B-A))] ∩ [A,B]`.
+`[a+k*(B-A),b+k*(B-A))] ∩ [A,B]`.
 
-Depending on the relative location of the two intervals, the periodic interval
+Depending on the relative location of the two intervals, the periodic subinterval
 may be a single interval or a union of two intervals.
 """
-struct PeriodicInterval{I1,I2,T} <: Domain{T}
-    subdomain       ::  I1
-    periodicdomain  ::  I2
+struct PeriodicInterval{T} <: Domain{T}
+    subdomain       ::  ClosedInterval{T}
+    periodicdomain  ::  ClosedInterval{T}
+    numelements     ::  Int
+    interval1       ::  ClosedInterval{T}
+    interval2       ::  ClosedInterval{T}
 end
 
+# Invoke PeriodicInterval{T}
 PeriodicInterval(subdomain::AbstractInterval{T}, periodicdomain::AbstractInterval{T}) where {T} =
-    PeriodicInterval{typeof(subdomain),typeof(periodicdomain),T}(subdomain, periodicdomain)
+    PeriodicInterval{T}(subdomain, periodicdomain)
 
-indomain(x, d::PeriodicInterval) = _indomain(x, d, d.subdomain, d.periodicdomain)
+# Convert the domains to closed intervals
+PeriodicInterval{T}(subdomain::AbstractInterval{T}, periodicdomain::AbstractInterval{T}) where {T} =
+    PeriodicInterval{T}(Interval(extrema(subdomain)...), Interval(extrema(periodicdomain)...))
 
-function _indomain(x, d::PeriodicInterval, subdomain::AbstractInterval, periodicdomain::AbstractInterval)
-    if x ∉ periodicdomain
-        # x is not contained in [A,B]
-        return false
-    end
+period(d::PeriodicInterval) = IntervalSets.width(d.periodicdomain)
 
-    a,b = extrema(subdomain)
-    A,B = extrema(periodicdomain)
-    if b-a >= B-A
-        # interval [a,b] is larger than [A,B]
-        return true
-    end
-    if a >= A && b <= B
-        # interval [a,b] is contained within [A,B]
-        return x ∈ subdomain
+# Figure out the subintervals upon construction. Allow for some small tolerance.
+function PeriodicInterval{T}(subdomain::ClosedInterval{T}, periodicdomain::ClosedInterval{T}) where {T}
+    tol = 100eps(T)
+    a, b = extrema(subdomain)
+    A, B = extrema(periodicdomain)
+    if b-a >= B-A-tol
+        numelements = 1
+        interval1 = ClosedInterval(A, B)
+        interval2 = ClosedInterval(A, A)
     else
-        # wrap [a,b] to the union of [a1,B] and [A,b1]
-        a1 = A + mod(a-A,B-A)
-        b1 = A + mod(b-A,B-A)
-        return (x >= a1) || (x <= b1)
+        a = A + mod(a-A, B-A)
+        b = A + mod(b-A, B-A)
+        if (b < a)
+            # We make sure that each interval is at least tol wide
+            if (a < B-tol)
+                if (b > A+tol)
+                    numelements = 2
+                    interval1 = ClosedInterval(A, b)
+                    interval2 = ClosedInterval(a, B)
+                else
+                    numelements = 1
+                    interval1 = ClosedInterval(a, B)
+                    interval2 = ClosedInterval(A, A)
+                end
+            else
+                if (b > A+tol)
+                    numelements = 1
+                    interval1 = ClosedInterval(A, b)
+                    interval2 = ClosedInterval(A, A)
+                else
+                    # This should never happen, they are both close to the endpoints
+                    numelements = 1
+                    interval1 = ClosedInterval(A, B)
+                    interval2 = ClosedInterval(A, A)
+                end
+            end
+        else
+            numelements = 1
+            interval1 = ClosedInterval(a, b)
+            interval2 = ClosedInterval(A, A)
+        end
+    end
+    PeriodicInterval{T}(subdomain, periodicdomain, numelements, interval1, interval2)
+end
+
+iscomposite(domain::PeriodicInterval) = true
+
+numelements(domain::PeriodicInterval) = domain.numelements
+
+function element(domain::PeriodicInterval, idx)
+    if idx == 1
+        domain.interval1
+    elseif idx == 2
+        domain.interval2
+    else
+        error("Index too large in element function of PeriodicInterval: ", idx)
     end
 end
 
-approx_indomain(x, d::PeriodicInterval, tolerance) = _approx_indomain(x, d, tolerance, d.subdomain, d.periodicdomain)
+elements(domain::PeriodicInterval) =
+    domain.numelements == 1 ? [domain.interval1] : [domain.interval1, domain.interval2]
 
-function _approx_indomain(x, d::PeriodicInterval, tolerance, subdomain::AbstractInterval, periodicdomain::AbstractInterval)
-    if !approx_in(x, periodicdomain)
-        # x is not contained in [A,B]
-        return false
-    end
+indomain(x, d::PeriodicInterval) =
+    _indomain(x, d, d.numelements, d.interval1, d.interval2)
 
-    a,b = extrema(subdomain)
-    A,B = extrema(periodicdomain)
-    if b-a >= B-A
-        # interval [a,b] is larger than [A,B]
-        return true
-    end
-    if a >= A && b <= B
-        # interval [a,b] is contained within [A,B]
-        return approx_in(x, subdomain)
+_indomain(x, d::PeriodicInterval, numelements, interval1, interval2) =
+    numelements == 1 ? x ∈ interval1 : (x ∈ interval1 || x ∈ interval2)
+
+approx_indomain(x, d::PeriodicInterval, tolerance) =
+    _approx_indomain(x, d, tolerance, d.numelements, d.interval1, d.interval2)
+
+function _approx_indomain(x, d::PeriodicInterval, tolerance, numelements, interval1, interval2)
+    if numelements == 1
+        DomainSets.approx_indomain(x, interval1, tolerance)
     else
-        # wrap [a,b] to the union of [a1,B] and [A,b1]
-        a1 = A + mod(a-A,B-A)
-        b1 = A + mod(b-A,B-A)
-        return (x >= a1-tolerance) || (x <= b1+tolerance)
+        DomainSets.approx_indomain(x, interval1, tolerance) || DomainSets.approx_indomain(x, interval2, tolerance)
     end
 end
 
-function infimum(d::PeriodicInterval)
-    a, b = extrema(d.subdomain)
-    A, B = extrema(d.periodicdomain)
-    b-a >= B-A  && return A
-    a1 = a ∈ d.periodicdomain ? a : A + mod(a-A,B-A)
-    b1 = b ∈ d.periodicdomain ? b : A + mod(b-A,B-A)
-    if b1 > a1
-        a1
+infimum(d::PeriodicInterval) = infimum(d.interval1)
+
+extremum(d::PeriodicInterval) = numelements(d) == 1 ? extremum(d.interval1) : extremum(d.interval2)
+
+# Type-unsafe: intersection with an interval
+function Base.intersect(d::PeriodicInterval, a::AbstractInterval)
+    if numelements(d) > 1
+        UnionDomain(intersect(element(d,1), a),intersect(element(d,2), a))
     else
-        A
+        intersect(element(d,1), a)
     end
 end
 
-function supremum(d::PeriodicInterval)
-    a, b = extrema(d.subdomain)
-    A, B = extrema(d.periodicdomain)
-    b-a >= B-A  && return B
-    a1 = a ∈ d.periodicdomain ? a : A + mod(a-A,B-A)
-    b1 = b ∈ d.periodicdomain ? b : A + mod(b-A,B-A)
-    if b1 > a1
-        b1
-    else
-        B
-    end
-end
+
 
 end
