@@ -1,5 +1,7 @@
 module PeriodicIntervals
-using DomainSets, BasisFunctions
+using DomainSets, BasisFunctions, IntervalSets
+
+using DomainSets: width
 
 import DomainSets: indomain, approx_indomain, infimum, supremum, elements, numelements,
     element
@@ -32,7 +34,7 @@ PeriodicInterval(subdomain::AbstractInterval{T}, periodicdomain::AbstractInterva
 PeriodicInterval{T}(subdomain::AbstractInterval{T}, periodicdomain::AbstractInterval{T}) where {T} =
     PeriodicInterval{T}(Interval(extrema(subdomain)...), Interval(extrema(periodicdomain)...))
 
-period(d::PeriodicInterval) = IntervalSets.width(d.periodicdomain)
+period(d::PeriodicInterval) = width(d.periodicdomain)
 
 # Figure out the subintervals upon construction. Allow for some small tolerance.
 function PeriodicInterval{T}(subdomain::ClosedInterval{T}, periodicdomain::ClosedInterval{T}) where {T}
