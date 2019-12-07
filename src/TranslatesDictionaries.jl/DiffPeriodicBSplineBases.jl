@@ -29,7 +29,7 @@ measure(dict::DiffPeriodicBSplineBasis{T}) where T =
 translationgrid(dict::DiffPeriodicBSplineBasis{T}) where T =
     PeriodicEquispacedGrid(length(dict), zero(T),one(T))
 hasgrid_transform(dict::DiffPeriodicBSplineBasis, _, grid::AbstractEquispacedGrid) =
-    size(dict)==size(grid) && compatible_interpolationgrid(typeof(dict), grid)
+    size(dict)==size(grid) && compatible_interpolationgrid(dict, grid)
 eval_kernel(dict::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
     (n = length(dict); sqrt(T(n))*n^D*evaluate_centered_BSpline_derivative(Val{K}(), Val{D}(), n*x, T))
 kernel_support(dict::DiffPeriodicBSplineBasis) =
