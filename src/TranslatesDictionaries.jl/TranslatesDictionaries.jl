@@ -6,7 +6,7 @@ using BasisFunctions: GenericLebesgueMeasure
 
 import BasisFunctions: support, size, length, ordering, unsafe_eval_element, hasinterpolationgrid,
     interpolation_grid, hasmeasure, measure, name,
-    isperiodic, period, similar, rescale
+    isperiodic, period, similar, rescale, dict_in_support
 import Base: step
 
 export Translates
@@ -34,7 +34,9 @@ size(dict::Translates) = size(translationgrid(dict))
 length(dict::Translates) = length(translationgrid(dict))
 ordering(dict::Translates) = eachindex(translationgrid(dict))
 unsafe_eval_element(dict::Translates, idxn, x) =
-    eval_kernel(dict, x-translationgrid(dict)[idxn])
+    unsafe_eval_kernel(dict, x-translationgrid(dict)[idxn])
+dict_in_support(dict::Translates, idxn, x) =
+    (x-translationgrid(dict)[idxn]) ∈ kernel_support(dict)
 
 export kernel_support
 """
@@ -64,6 +66,10 @@ function eval_kernel(dict::Translates{T}, x) where {T}
         zero(T)
     end
 end
+
+unsafe_eval_kernel(dict::Translates, x) =
+    dict.kernel(x)
+
 name(::Translates) = "Translates of a kernel function"
 
 export GenericTranslates

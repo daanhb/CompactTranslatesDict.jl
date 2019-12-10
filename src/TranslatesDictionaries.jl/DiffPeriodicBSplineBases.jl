@@ -7,7 +7,7 @@ using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_der
 
 import BasisFunctions: strings, support, measure, size, hasgrid_transform, length, similar,
     instantiate, resize, innerproduct_native, name
-import ..TranslatesDictionaries: translationgrid, eval_kernel, kernel_support
+import ..TranslatesDictionaries: translationgrid, unsafe_eval_kernel, kernel_support, eval_kernel
 import ..PeriodicEquispacedTranslatesDicts: firstgramcolumn
 import Base: ==
 
@@ -31,6 +31,8 @@ translationgrid(dict::DiffPeriodicBSplineBasis{T}) where T =
 hasgrid_transform(dict::DiffPeriodicBSplineBasis, _, grid::AbstractEquispacedGrid) =
     size(dict)==size(grid) && compatible_interpolationgrid(typeof(dict), grid)
 eval_kernel(dict::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
+    unsafe_eval_kernel(dict, x)
+unsafe_eval_kernel(dict::DICT where DICT<:DiffPeriodicBSplineBasis{T,K,D}, x) where {T,K,D} =
     (n = length(dict); sqrt(T(n))*n^D*evaluate_centered_BSpline_derivative(Val{K}(), Val{D}(), n*x, T))
 kernel_support(dict::DiffPeriodicBSplineBasis) =
     DomainSets.Interval{:closed,:open}(-convert(coefficienttype(dict),degree(dict)+1)/2/length(dict),convert(coefficienttype(dict),degree(dict)+1)/2/length(dict))
@@ -72,9 +74,9 @@ for (TYPE,fun) in zip(
             rescale($(TYPE){Q}(n, degree;options...), Q(a), Q(b))
         end
 
-        eval_kernel(dict::$(TYPE){T,K,true}, x) where {K,T} =
+        unsafe_eval_kernel(dict::$(TYPE){T,K,true}, x) where {K,T} =
             (n = length(dict); sqrt(T(n))*$(fun)(Val{K}(), n*x, T))
-        eval_kernel(dict::$(TYPE){T,K,false}, x) where {K,T} =
+        unsafe_eval_kernel(dict::$(TYPE){T,K,false}, x) where {K,T} =
             (n = length(dict); $(fun)(Val{K}(), n*x, T))
 
         scaled(::$(TYPE){T,K,SCALED}) where {T,K,SCALED} = SCALED

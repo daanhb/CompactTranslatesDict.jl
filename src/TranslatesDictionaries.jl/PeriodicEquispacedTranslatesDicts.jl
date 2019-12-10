@@ -4,11 +4,12 @@ using BasisFunctions, DomainSets, GridArrays, ..TranslatesDictionaries, FillArra
 
 using BasisFunctions: VerticalBandedMatrix, op_eltype, default_mixedgramoperator_discretemeasure,
     GenericLebesgueMeasure, DiscreteMeasure
+using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel
 using DomainSets: width
 using GridArrays: similargrid
 
 import BasisFunctions: isperiodic, period, support, name, hasgrid_transform, transform_from_grid,
-    transform_to_grid, grid_evaluation_operator, gramoperator, unsafe_eval_element, similar, rescale
+    transform_to_grid, grid_evaluation_operator, gramoperator, unsafe_eval_element, similar, rescale, dict_in_support
 import LinearAlgebra: norm
 import ..TranslatesDictionaries: compatible_translationgrid
 
@@ -25,6 +26,14 @@ end
 compatible_translationgrid(::Type{<:PeriodicEquispacedTranslates}, grid::AbstractGrid) =
     compatible_translationgrid(EquispacedTranslates, grid) && isperiodic(grid)
 isperiodic(::PeriodicEquispacedTranslates) = true
+function dict_in_support(dict::PeriodicEquispacedTranslates, idxn, x)
+    c = x-translationgrid(dict)[idxn]
+    per = period(dict)
+    A = infimum(kernel_support(dict))
+    steps =floor((c-A)/per)
+    c -= steps*per
+    c ∈ kernel_support(dict)
+end
 
 """
     period(dict::PeriodicEquispacedTranslates)
@@ -148,17 +157,17 @@ function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:sum}, idx, 
     per = period(dict)
     A,B = extrema(kernel_support(dict))
 
-    z = eval_kernel(dict, x - c)
+    z = unsafe_eval_kernel(dict, x - c)
 	# Now evaluate the periodic extension. We add and subtract the period
 	# repeatedly until we are beyond the support of the kernel.
     x1 = x + per
     while (x1 <= c + B)
-        z += eval_kernel(dict, x1-c)
+        z += unsafe_eval_kernel(dict, x1-c)
         x1 += per
     end
     x2 = x - per
     while (x2 >= c + A)
-        z += eval_kernel(dict, x2-c)
+        z += unsafe_eval_kernel(dict, x2-c)
 		x2 -= per
     end
     z
@@ -176,7 +185,7 @@ function norm(dict::PeriodicEquispacedTranslates{T,S,:norm}, x, y) where {T,S}
 end
 function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:norm}, idx, x) where {T,S}
     c = translationgrid(dict)[idx]
-    z = eval_kernel(dict, norm(dict, x, c))
+    z = unsafe_eval_kernel(dict, norm(dict, x, c))
 end
 
 

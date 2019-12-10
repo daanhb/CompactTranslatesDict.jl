@@ -117,7 +117,7 @@ end
 
 infimum(d::PeriodicInterval) = infimum(d.interval1)
 
-extremum(d::PeriodicInterval) = numelements(d) == 1 ? extremum(d.interval1) : extremum(d.interval2)
+supremum(d::PeriodicInterval) = numelements(d) == 1 ? supremum(d.interval1) : supremum(d.interval2)
 
 # Type-unsafe: intersection with an interval
 function Base.intersect(d::PeriodicInterval, a::AbstractInterval)
