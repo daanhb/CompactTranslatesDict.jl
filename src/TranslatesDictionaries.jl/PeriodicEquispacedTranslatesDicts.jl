@@ -58,7 +58,7 @@ transform_from_grid(src, dest::PeriodicEquispacedTranslates, grid; options...) =
 
 function transform_to_grid(src::PeriodicEquispacedTranslates, dest, grid::AbstractEquispacedGrid; options...)
     @assert hasgrid_transform(src, dest, grid)
-    CirculantOperator(src, dest, sample(grid, x->eval_kernel(src, x)); options...)
+    CirculantOperator(sample(grid, x->eval_kernel(src, x)), src, dest; options...)
 end
 
 function vertical_banded_matrix(dict::Dictionary, kernel, kernel_support::AbstractInterval, support::AbstractInterval, m::Int, y, T)
