@@ -25,7 +25,7 @@ Test Passed
 """
 function compactinfinitevector(dict::Dictionary{T}, grid::AbstractEquispacedGrid; options...) where {T}
     @assert rem(length(grid),length(dict)) == 0
-    A = evaluation_operator(dict, grid; options...)
+    A = evaluation(dict, grid; options...)
     @assert A isa VerticalBandedOperator
     a = convert(Vector{T}, A.A.array)
     f = 1

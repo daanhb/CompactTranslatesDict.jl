@@ -7,7 +7,7 @@ using InfiniteVectors: downsample, subvector, PeriodicInfiniteVector, sublength,
 using ..CompactInfiniteVectors: compactinfinitevector
 using GridArrays: PeriodicEquispacedGrid
 
-import BasisFunctions: string, strings, name, unsafe_eval_element, grid_evaluation_operator, size, length, support
+import BasisFunctions: string, strings, name, unsafe_eval_element, evaluation, size, length, support
 import CompactTranslatesDict: eval_kernel
 import CardinalBSplines: minimalK
 
@@ -34,7 +34,7 @@ Equispaced translates of a discrete kernel dual
       ↳ support = -1.0..1.0
     ↳ m = 2
 
-julia> A = evaluation_operator(B, PeriodicEquispacedGrid(10, BasisFunctions.support(B)))
+julia> A = evaluation(B, PeriodicEquispacedGrid(10, BasisFunctions.support(B)))
 Multiplication by BasisFunctions.VerticalBandedMatrix{Float64}
 ```
 """
@@ -85,14 +85,14 @@ strings(d::CompactPeriodicEquispacedTranslatesDual) = (string(d),strings(d.dict)
 
 unsafe_eval_element(dict::CompactPeriodicEquispacedTranslatesDual, i, x) =
     error("`CompactPeriodicEquispacedTranslatesDual` can only be evaluated in `PeriodicEquispacedGrid`")
-grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual, gb::GridBasis, grid::AbstractGrid) =
+evaluation(dict::CompactPeriodicEquispacedTranslatesDual, gb::GridBasis, grid::AbstractGrid) =
     error("`CompactPeriodicEquispacedTranslatesDual` can only be evaluated in `PeriodicEquispacedGrid`")
-grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual, dgs::GridBasis, grid::AbstractEquispacedGrid) =
+evaluation(dict::CompactPeriodicEquispacedTranslatesDual, dgs::GridBasis, grid::AbstractEquispacedGrid) =
     error("`CompactPeriodicEquispacedTranslatesDual` can only be evaluated in `PeriodicEquispacedGrid`")
 eval_kernel(dict::CompactPeriodicEquispacedTranslatesDual, x) =
     error("`CompactPeriodicEquispacedTranslatesDual` can only be evaluated in `PeriodicEquispacedGrid`")
 
-function grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual{T}, gb::GridBasis, grid::PeriodicEquispacedGrid;
+function evaluation(::Type{T}, dict::CompactPeriodicEquispacedTranslatesDual{T}, gb::GridBasis, grid::PeriodicEquispacedGrid;
         verbose=false, threshold=100eps(T), compact_dual_max=Inf, options...) where {T}
     @assert support(dict) ≈ support(grid)
     m_dict = dict.m
@@ -133,7 +133,7 @@ function grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual{
     (round(shift) ≈ shift) || error("not implemented")
     shift = round(Int, shift)
 
-    ArrayOperator(VerticalBandedMatrix(length(grid), length(dict), a, shift, -1+bw[2]-length(grid)), dict, GridBasis{coefficienttype(dict)}(grid))
+    ArrayOperator{T}(VerticalBandedMatrix(length(grid), length(dict), a, shift, -1+bw[2]-length(grid)), dict, GridBasis{coefficienttype(dict)}(grid))
 end
 
 signal(dict::Dictionary, m::Int) =

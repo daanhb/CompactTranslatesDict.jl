@@ -9,11 +9,11 @@ B = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(N,-1.123,1.432), 
 
 m = 2
 D = CompactPeriodicEquispacedTranslatesDual(B, m)
-m1 = evaluation_operator(B,similargrid(interpolation_grid(B), Float64,m*N))
-m2 = evaluation_operator(D,similargrid(interpolation_grid(B), Float64,m*N))
+m1 = evaluation(B,similargrid(interpolation_grid(B), Float64,m*N))
+m2 = evaluation(D,similargrid(interpolation_grid(B), Float64,m*N))
 @test m1'm2≈IdentityOperator(B, B)
 μ = discretemeasure(similargrid(interpolation_grid(B),Float64,m*N))
-@test mixedgramoperator(B,D,μ)≈IdentityOperator(B, B)
+@test mixedgram(B,D,μ)≈IdentityOperator(B, B)
 
 using InfiniteVectors
 b = CompactPeriodicEquispacedTranslatesDuals.signal(B,2)
@@ -21,5 +21,5 @@ primal_signal = PeriodicInfiniteVector(b, 20)[0:19]
 c = inv(b, 2,K=D.minimalK)'
 dual_signal = PeriodicInfiniteVector(c, 20)[0:19]
 
-@test evaluation_operator(B, grid(μ)).A[:,1]≈primal_signal
-@test evaluation_operator(D, grid(μ)).A[:,1]≈dual_signal
+@test evaluation(B, grid(μ)).A[:,1]≈primal_signal
+@test evaluation(D, grid(μ)).A[:,1]≈dual_signal

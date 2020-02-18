@@ -2,14 +2,14 @@ module PeriodicEquispacedTranslatesDicts
 
 using BasisFunctions, DomainSets, GridArrays, ..TranslatesDictionaries, FillArrays, ..PeriodicIntervals
 
-using BasisFunctions: VerticalBandedMatrix, op_eltype, default_mixedgramoperator_discretemeasure,
+using BasisFunctions: VerticalBandedMatrix, op_eltype, default_mixedgram_discretemeasure,
     GenericLebesgueMeasure, DiscreteMeasure
 using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel
 using DomainSets: width
 using GridArrays: similargrid
 
 import BasisFunctions: isperiodic, period, support, name, hasgrid_transform, transform_from_grid,
-    transform_to_grid, grid_evaluation_operator, gramoperator, unsafe_eval_element, similar, rescale, dict_in_support
+    transform_to_grid, evaluation, gram, unsafe_eval_element, similar, rescale, dict_in_support
 import LinearAlgebra: norm
 import ..TranslatesDictionaries: compatible_translationgrid
 
@@ -87,8 +87,8 @@ function vertical_banded_matrix(dict::Dictionary, kernel, kernel_support::Abstra
     VerticalBandedMatrix(m, length(dict), a[f:l], div(m,length(dict)), offset+f-1)
 end
 
-function grid_evaluation_operator(dict::PeriodicEquispacedTranslates, dgs::GridBasis, grid::AbstractEquispacedGrid;
-            T=op_eltype(dict, dgs), options...)
+function evaluation(::Type{T}, dict::PeriodicEquispacedTranslates, dgs::GridBasis, grid::AbstractEquispacedGrid;
+            options...) where {T}
     lg = length(grid)
     ls = length(dict)
     m, rem = divrem(lg, ls)
@@ -98,18 +98,15 @@ function grid_evaluation_operator(dict::PeriodicEquispacedTranslates, dgs::GridB
         # firstcolumn = convert.(T, firstcolumn)
         # a, offset = _get_array_offset(firstcolumn)
         # M = VerticalBandedMatrix{T}(length(dgs), length(s), a, m, offset-1)
-        ArrayOperator(M, dict, dgs)
+        ArrayOperator{T}(M, dict, dgs)
         # # VerticalBandedOperator(s, dgs, a, m, offset-1; T=T)
     else
         @debug "slow evaluation operator"
         # Not type stable if we allow this branch
-        BasisFunctions.dense_evaluation_operator(dict, dgs; options...)
+        BasisFunctions.dense_evaluation(T, dict, dgs; options...)
         # error("Not type stable if we allow this branch")
     end
 end
-
-gramoperator(dict::PeriodicEquispacedTranslates, measure::GenericLebesgueMeasure; options...) =
-    _translatescirculantoperator(dict, measure)
 
 if isdefined(BasisFunctions, :isgramcompatible)
     import BasisFunctions: isgramcompatible
@@ -126,23 +123,23 @@ function isgramcompatible(b::PeriodicEquispacedTranslates, grid::AbstractEquispa
     support(b)≈support(grid) && (n≈nInt)
 end
 
-function gramoperator(dict::PeriodicEquispacedTranslates, measure::DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill;
-        options...)
+function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill;
+        options...) where {T}
     if isgramcompatible(dict, grid)
-        CirculantOperator(default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...))
+        CirculantOperator(default_mixedgram_discretemeasure(T, dict, dict, measure, grid, weights; options...))
     else
-        default_mixedgramoperator_discretemeasure(dict, dict, measure, grid, weights; options...)
+        default_mixedgram_discretemeasure(T, dict, dict, measure, grid, weights; options...)
     end
 end
 
 
-function gramoperator(dict::PeriodicEquispacedTranslates, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure};
-        T = coefficienttype(dict), options...)
+function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure};
+        options...) where {T}
     @assert support(dict) ≈ support(measure)
-    CirculantOperator(firstgramcolumn(dict, measure; T=T, options...), dict, dict; T=T)
+    CirculantOperator{T}(firstgramcolumn(T, dict, measure; options...), dict, dict)
 end
 
-function firstgramcolumn(dict::Dictionary, measure::Measure; T = coefficienttype(dict), options...)
+function firstgramcolumn(T, dict::Dictionary, measure::Measure; options...)
     firstcolumn = zeros(T, length(dict))
     for (index,i) in enumerate(ordering(dict))
         firstcolumn[index] = innerproduct(dict, i, dict, ordering(dict)[1], measure; options...)

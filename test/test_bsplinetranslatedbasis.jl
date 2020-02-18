@@ -1,6 +1,6 @@
 using BasisFunctions, DomainSets, CompactTranslatesDict, Test, LinearAlgebra
 using BasisFunctions.Test: test_orthogonality_orthonormality
-using BasisFunctions: grid_evaluation_operator, dense_evaluation_operator
+using BasisFunctions: evaluation, dense_evaluation
 using CompactTranslatesDict.TranslatesDictionaries: compatible_interpolationgrid
 function test_generic_periodicbsplinebasis(B,T)
     tol = sqrt(eps(real(T)))
@@ -27,8 +27,8 @@ function test_translatedbsplines(T)
     n = 5
     bb = BSplineTranslatesBasis(n, 1, T; scaled=true)
     b = BSplineTranslatesBasis(n, 1, T; scaled=false)
-    e = rand(n)
-    @test norm(gramoperator(b)*e-gramoperator(bb)*e/n) < tol
+    e = rand(T,n)
+    @test norm(gram(b)*e-gram(bb)*e/n) < tol
 
     b = BSplineTranslatesBasis(n,3, T)
 
@@ -57,10 +57,10 @@ function test_translatedbsplines(T)
                 b1 = BSplineTranslatesBasis(s1,K,T)
                 b2 = BSplineTranslatesBasis(s2,K,T)
 
-                @test dense_evaluation_operator(b2, GridBasis(b2)) ≈ grid_evaluation_operator(b2, GridBasis(b2), interpolation_grid(b2))
-                @test dense_evaluation_operator(b2, GridBasis(b1)) ≈ grid_evaluation_operator(b2, GridBasis(b1), interpolation_grid(b1))
-                @test dense_evaluation_operator(b1, GridBasis(b1)) ≈ grid_evaluation_operator(b1, GridBasis(b1), interpolation_grid(b1))
-                @test dense_evaluation_operator(b1, GridBasis(b2)) ≈ grid_evaluation_operator(b1, GridBasis(b2), interpolation_grid(b2))
+                @test dense_evaluation(T, b2, GridBasis(b2)) ≈ evaluation(T, b2, GridBasis(b2), interpolation_grid(b2))
+                @test dense_evaluation(T, b2, GridBasis(b1)) ≈ evaluation(T, b2, GridBasis(b1), interpolation_grid(b1))
+                @test dense_evaluation(T, b1, GridBasis(b1)) ≈ evaluation(T, b1, GridBasis(b1), interpolation_grid(b1))
+                @test dense_evaluation(T, b1, GridBasis(b2)) ≈ evaluation(T, b1, GridBasis(b2), interpolation_grid(b2))
             end
         end
 
@@ -70,10 +70,10 @@ function test_translatedbsplines(T)
                 b1 = BSplineTranslatesBasis(s1,K,T; scaled=true)
                 b2 = BSplineTranslatesBasis(s2,K,T; scaled=true)
 
-                @test dense_evaluation_operator(b2, GridBasis(b2)) ≈ grid_evaluation_operator(b2, GridBasis(b2), interpolation_grid(b2))
-                @test dense_evaluation_operator(b2, GridBasis(b1)) ≈ grid_evaluation_operator(b2, GridBasis(b1), interpolation_grid(b1))
-                @test dense_evaluation_operator(b1, GridBasis(b1)) ≈ grid_evaluation_operator(b1, GridBasis(b1), interpolation_grid(b1))
-                @test dense_evaluation_operator(b1, GridBasis(b2)) ≈ grid_evaluation_operator(b1, GridBasis(b2), interpolation_grid(b2))
+                @test dense_evaluation(T, b2, GridBasis(b2)) ≈ evaluation(T, b2, GridBasis(b2), interpolation_grid(b2))
+                @test dense_evaluation(T, b2, GridBasis(b1)) ≈ evaluation(T, b2, GridBasis(b1), interpolation_grid(b1))
+                @test dense_evaluation(T, b1, GridBasis(b1)) ≈ evaluation(T, b1, GridBasis(b1), interpolation_grid(b1))
+                @test dense_evaluation(T, b1, GridBasis(b2)) ≈ evaluation(T, b1, GridBasis(b2), interpolation_grid(b2))
             end
         end
     end
@@ -87,7 +87,7 @@ function test_bspline_orthogonality_orthonormality()
                 discretemeasure(MidpointEquispacedGrid(4,0,1)),
                 discretemeasure(PeriodicEquispacedGrid(8,0,1)),
                 discretemeasure(MidpointEquispacedGrid(8,0,1))]
-        @test BasisFunctions.unsafe_matrix(gramoperator(B, m)) isa Circulant
+        @test BasisFunctions.unsafe_matrix(gram(B, m)) isa Circulant
         test_orthogonality_orthonormality(B, false, false, m; overquad=10)
     end
 end

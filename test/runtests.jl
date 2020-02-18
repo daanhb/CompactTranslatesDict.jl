@@ -36,24 +36,24 @@ for T in types
     end
 end
 
-@testset "gramoperator" begin
+@testset "gram" begin
     B = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,2π), cos, Interval(0.,.4))
-    μ = grid(discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
-    g1 = gramoperator(B, discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
-    g2 = BasisFunctions.default_gramoperator(B, discretemeasure(PeriodicEquispacedGrid(10,0,2π)))
+    μ = discretemeasure(PeriodicEquispacedGrid(10,0,2π))
+    g1 = gram(B, μ)
+    g2 = BasisFunctions.default_gram(B, μ)
     @test g1≈g2
 
     B = BSplineTranslatesBasis(10,3)
-    g0 = BasisFunctions.default_gramoperator(B;overquad=100)
-    g1 = gramoperator(B;overquad=100)
-    g2 = gramoperator(B, FourierMeasure();overquad=100)
-    g3 = BasisFunctions.default_gramoperator(B, FourierMeasure();overquad=100)
+    g0 = BasisFunctions.default_gram(B;overquad=100)
+    g1 = gram(B;overquad=100)
+    g2 = gram(B, FourierMeasure();overquad=100)
+    g3 = BasisFunctions.default_gram(B, FourierMeasure();overquad=100)
     @test g1≈g0≈g2≈g3
     @test g1 isa CirculantOperator
     @test g2 isa CirculantOperator
 
-    g0 = gramoperator(B, discretemeasure(BasisFunctions.interpolation_grid(B)))
-    g1 = BasisFunctions.default_gramoperator(B, discretemeasure(BasisFunctions.interpolation_grid(B)))
+    g0 = gram(B, discretemeasure(BasisFunctions.interpolation_grid(B)))
+    g1 = BasisFunctions.default_gram(B, discretemeasure(BasisFunctions.interpolation_grid(B)))
     @test g0≈g1
     @test g0 isa CirculantOperator
     @test BasisFunctions.hasinterpolationgrid(B) ≈ hasinterpolationgrid(B)
