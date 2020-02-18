@@ -44,13 +44,19 @@ struct CompactPeriodicEquispacedTranslatesDual{T,S,PERIODIZATION,DICT<:Dictionar
     minimalK::Int
 end
 
-function CompactPeriodicEquispacedTranslatesDual(dict::Dictionary1d{T,S}, m::Int) where {T,S}
+function CompactPeriodicEquispacedTranslatesDual(dict::Dictionary1d{T,S}, m::Int; threshold=sqrt(eps(T)), compact_dual_max=Inf,options...) where {T,S}
     N =  m*length(dict)
     b = signal(dict, m)
+
+    minK = min_dual_vector(b, m, 0, threshold, compact_dual_max)
+    CompactPeriodicEquispacedTranslatesDual{T,S,:sum,typeof(dict)}(dict, m, minK)
+end
+
+function min_dual_vector(b, m, Mmin, threshold, compact_dual_max)
     minK = -1
-    for K in 0:2sublength(b)
+    for K in Mmin:2sublength(b)
         try
-            inv(b,m,K=K)
+            inv(b,m,threshold;K=K,maximum=compact_dual_max)
             minK = K
             break;
         catch e
@@ -64,8 +70,9 @@ function CompactPeriodicEquispacedTranslatesDual(dict::Dictionary1d{T,S}, m::Int
     if minK==-1
         error("No compact dual found")
     end
-    CompactPeriodicEquispacedTranslatesDual{T,S,:sum,typeof(dict)}(dict, m, minK)
+    minK
 end
+
 size(dict::CompactPeriodicEquispacedTranslatesDual) = (length(dict.dict),)
 length(dict::CompactPeriodicEquispacedTranslatesDual) = length(dict.dict)
 support(dict::CompactPeriodicEquispacedTranslatesDual) = support(dict.dict)
@@ -86,7 +93,7 @@ eval_kernel(dict::CompactPeriodicEquispacedTranslatesDual, x) =
     error("`CompactPeriodicEquispacedTranslatesDual` can only be evaluated in `PeriodicEquispacedGrid`")
 
 function grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual{T}, gb::GridBasis, grid::PeriodicEquispacedGrid;
-        threshold=100eps(T), options...) where {T}
+        verbose=false, threshold=100eps(T), compact_dual_max=Inf, options...) where {T}
     @assert support(dict) ≈ support(grid)
     m_dict = dict.m
     m_frac = m_dict*length(dict) / length(grid)
@@ -96,7 +103,11 @@ function grid_evaluation_operator(dict::CompactPeriodicEquispacedTranslatesDual{
 
     N =  m_dict*length(dict)
     b = signal(dict.dict, m_dict)
-    dual_signal = PeriodicInfiniteVector(inv(b, m_dict, threshold; K=dict.minimalK)', N)
+
+    verbose && @info "Try dual with max $compact_dual_max oversampling $m_dict and threshold $threshold"
+    minK = min_dual_vector(b, m_dict, 0, threshold, compact_dual_max)
+    verbose && @info "Found dual with length $minK,"
+    dual_signal = PeriodicInfiniteVector(inv(b, m_dict, threshold; K=minK, maximum=compact_dual_max)', N)
 
     v = downsample(dual_signal, m_frac)
 
