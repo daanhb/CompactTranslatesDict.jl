@@ -213,10 +213,10 @@ struct GenericPeriodicEquispacedTranslates{T,S,PERIODIZATION,GRID<:AbstractGrid,
     end
 end
 
-similar(dict::GenericPeriodicEquispacedTranslates{K,S,PERIODIZATION}, ::Type{T}, n) where {K,S,T,PERIODIZATION} =
-    GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n), dict.kernel, dict.kernel_support,PERIODIZATION)
+similar(dict::GenericPeriodicEquispacedTranslates{K,S,PERIODIZATION}, ::Type{T}, n::Int...) where {K,S,T,PERIODIZATION} =
+    GenericPeriodicEquispacedTranslates(similargrid(translationgrid(dict),real(T), n...), dict.kernel, dict.kernel_support,PERIODIZATION)
 
-function rescale(dict::PeriodicEquispacedTranslates, a, b)
+function rescale(dict::PeriodicEquispacedTranslates, a::T, b::T) where {T<:Number}
     map = interval_map(extrema(support(dict))...,   a, b)
     GenericPeriodicEquispacedTranslates(mapped_grid(translationgrid(dict),map),
         x->eval_kernel(dict, inv(map)*x),
