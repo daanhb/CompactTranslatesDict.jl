@@ -1,10 +1,4 @@
-using CompactTranslatesDict, BasisFunctions, DomainSets
 types = [Float64, BigFloat]
-
-
-
-
-
 using CompactTranslatesDict, BasisFunctions, Test, DomainSets
 using BasisFunctions: period, isperiodic
 @testset begin
