@@ -102,11 +102,11 @@ function evaluation(::Type{T}, dict::CompactPeriodicEquispacedTranslatesDual{T},
     m_frac = round(Int, m_frac)
 
     N =  m_dict*length(dict)
-    b = signal(dict.dict, m_dict)
+    b = signal(dict.dict, m_dict; verbose=verbose, threshold=threshold, options...)
 
     verbose && @info "Try dual with max $compact_dual_max oversampling $m_dict and threshold $threshold"
     minK = min_dual_vector(b, m_dict, 0, threshold, compact_dual_max)
-    verbose && @info "Found dual with length $minK,"
+    verbose && @info "Found dual with length $(2minK+1),"
     dual_signal = PeriodicInfiniteVector(inv(b, m_dict, threshold; K=minK, maximum=compact_dual_max)', N)
 
     v = downsample(dual_signal, m_frac)
@@ -136,7 +136,7 @@ function evaluation(::Type{T}, dict::CompactPeriodicEquispacedTranslatesDual{T},
     ArrayOperator{T}(VerticalBandedMatrix(length(grid), length(dict), a, shift, -1+bw[2]-length(grid)), dict, GridBasis{coefficienttype(dict)}(grid))
 end
 
-signal(dict::Dictionary, m::Int) =
-    shift!(compactinfinitevector(dict, PeriodicEquispacedGrid(m*length(dict),support(dict)),),-1)
+signal(dict::Dictionary, m::Int; options...) =
+    shift!(compactinfinitevector(dict, PeriodicEquispacedGrid(m*length(dict),support(dict));options...),-1)
 
 end
