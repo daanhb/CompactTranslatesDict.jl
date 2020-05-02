@@ -21,5 +21,5 @@ primal_signal = PeriodicInfiniteVector(b, 20)[0:19]
 c = inv(b, 2,K=D.minimalK)'
 dual_signal = PeriodicInfiniteVector(c, 20)[0:19]
 
-@test evaluation(B, grid(μ)).A[:,1]≈primal_signal
-@test evaluation(D, grid(μ)).A[:,1]≈dual_signal
+@test evaluation(B, points(μ)).A[:,1]≈primal_signal
+@test evaluation(D, points(μ)).A[:,1]≈dual_signal
