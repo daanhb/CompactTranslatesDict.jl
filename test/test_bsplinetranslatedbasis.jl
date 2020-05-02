@@ -14,7 +14,6 @@ function test_generic_periodicbsplinebasis(B,T)
     @test infimum(CompactTranslatesDict.kernel_support(b)) <= 0 <= supremum(CompactTranslatesDict.kernel_support(b))
     @test 0 < supremum(CompactTranslatesDict.kernel_support(b)) - infimum(CompactTranslatesDict.kernel_support(b)) < BasisFunctions.period(b)
 
-    @test instantiate(B, 4, Float16)==B(4,3,Float16)
     @test resize(b, 20)==B(20,CompactTranslatesDict.degree(b),T)
     @test interpolation_grid(b)==PeriodicEquispacedGrid{T}(n,0,1)
     @test BasisFunctions.period(b)==T(1)

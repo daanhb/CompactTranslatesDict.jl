@@ -94,7 +94,7 @@ eval_kernel(dict::CompactPeriodicEquispacedTranslatesDual, x) =
 
 function evaluation(::Type{T}, dict::CompactPeriodicEquispacedTranslatesDual{T}, gb::GridBasis, grid::PeriodicEquispacedGrid;
         verbose=false, threshold=100eps(T), compact_dual_max=Inf, options...) where {T}
-    @assert support(dict) ≈ support(grid)
+    @assert support(dict) ≈ coverdomain(grid)
     m_dict = dict.m
     m_frac = m_dict*length(dict) / length(grid)
 

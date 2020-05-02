@@ -5,6 +5,7 @@ version = "0.1.1"
 [deps]
 BasisFunctions = "4343a256-5453-507d-8aad-01a9d7189916"
 CardinalBSplines = "87d49508-7ad8-11e8-0eda-cb6920b58870"
+DomainIntegrals = "cc6bae93-f070-4015-88fd-838f9505a86c"
 DomainSets = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 GridArrays = "356ae075-8bc9-5ef9-a342-46c9ba26438c"
@@ -16,7 +17,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-BasisFunctions = ">= 0.1.1"
+BasisFunctions = "0.1.4"
 InfiniteVectors = "≥ 0.0.5"
 julia = "1.0"
 

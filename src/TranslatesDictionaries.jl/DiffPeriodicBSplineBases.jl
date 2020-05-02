@@ -6,7 +6,7 @@ using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_der
     evaluate_centered_gauss_BSpline, shifted_spline_integral
 
 import BasisFunctions: strings, support, measure, size, hasgrid_transform, length, similar,
-    instantiate, resize, innerproduct_native, name
+    resize, innerproduct_native, name
 import ..TranslatesDictionaries: translationgrid, unsafe_eval_kernel, kernel_support, eval_kernel
 import ..PeriodicEquispacedTranslatesDicts: firstgramcolumn
 import Base: ==
@@ -66,7 +66,7 @@ for (TYPE,fun) in zip(
         $(TYPE)(n::Int, degree::Int, ::Type{T} = Float64; options...) where {T} =
             $(TYPE){T}(n, degree; options...)
 
-        $(TYPE){T}(n::Int, degree::Int; options...) where {T} = $(TYPE){T,degree}(n; options...)
+        $(TYPE){T}(n::Int, degree::Int = 3; options...) where {T} = $(TYPE){T,degree}(n; options...)
         $(TYPE){T,degree}(n::Int; scaled=true) where {T,degree} = $(TYPE){T,degree,scaled}(n)
 
         function $(TYPE)(n::Int, degree::Int, a::T, b::T, ::Type{S}=T; options...) where {T,S}
@@ -82,8 +82,6 @@ for (TYPE,fun) in zip(
         scaled(::$(TYPE){T,K,SCALED}) where {T,K,SCALED} = SCALED
 
         ==(dict1::$(TYPE){T1,K1}, dict2::$(TYPE){T2,K2}) where {K1,K2,T1,T2} = T1==T2 && K1==K2 && length(dict1)==length(dict2)
-
-        instantiate(::Type{$(TYPE)}, n::Int, ::Type{T}) where {T} = $(TYPE){T}(n,3)
 
         resize(dict::$(TYPE){T}, n::Int) where {T} = $(TYPE){T,degree(dict)}(n)
 
@@ -168,10 +166,8 @@ similar(d::DiffBSplineTranslatesBasis{S,K,D}, ::Type{T}, n::Int) where {S,T,K,D}
 DiffBSplineTranslatesBasis(n::Int, degree::Int, diff::Int, ::Type{T} = Float64; options...) where {T} =
     DiffBSplineTranslatesBasis{T}(n, degree, diff; options...)
 
-DiffBSplineTranslatesBasis{T}(n::Int, degree::Int, diff::Int; options...) where {T} = DiffBSplineTranslatesBasis{T,degree,diff}(n; options...)
+DiffBSplineTranslatesBasis{T}(n::Int, degree::Int = 0, diff::Int = 1; options...) where {T} = DiffBSplineTranslatesBasis{T,degree,diff}(n; options...)
 DiffBSplineTranslatesBasis{T,degree}(n::Int; D=0) where {T,degree} = DiffBSplineTranslatesBasis{T,degree,D}(n)
-
-instantiate(::Type{DiffBSplineTranslatesBasis}, n::Int, ::Type{T}) where {T} = DiffBSplineTranslatesBasis(n,3,1,T)
 
 resize(dict::DiffBSplineTranslatesBasis, n::Int) = DiffBSplineTranslatesBasis(n, degree(dict), Bdiff(dict), codomaintype(dict))
 

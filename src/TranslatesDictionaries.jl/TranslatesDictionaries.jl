@@ -2,7 +2,7 @@ module TranslatesDictionaries
 
 using BasisFunctions, DomainSets, GridArrays, Reexport
 
-using BasisFunctions: GenericLebesgueMeasure
+using BasisFunctions: DomainLebesgueMeasure
 
 import BasisFunctions: support, size, length, ordering, unsafe_eval_element, hasinterpolationgrid,
     interpolation_grid, hasmeasure, measure, name,
@@ -19,7 +19,7 @@ end
 compatible_translationgrid(dict::Translates,grid::AbstractGrid) =
     size(dict) == size(grid) && compatible_translationgrid(typeof(dict), grid)
 compatible_translationgrid(::Type{<:Translates}, grid::AbstractGrid) =
-    first(grid) ∈ support(grid)
+    first(grid) ∈ coverdomain(grid)
 
 export translationgrid
 """
@@ -28,7 +28,7 @@ export translationgrid
 The translation grid of a Translates `dict`.
 """
 translationgrid(dict::Translates) = dict.grid
-support(dict::Translates) = support(translationgrid(dict))
+support(dict::Translates) = coverdomain(translationgrid(dict))
 support(dict::Translates, idx) = support(dict)
 size(dict::Translates) = size(translationgrid(dict))
 length(dict::Translates) = length(translationgrid(dict))
@@ -48,9 +48,9 @@ kernel_support(dict::Translates) = dict.kernel_support
 hasinterpolationgrid(::Translates) = true
 interpolation_grid(dict::Translates) = translationgrid(dict)
 compatible_interpolationgrid(dict::Translates, grid::AbstractGrid) =
-    support(dict)≈support(grid) && compatible_translationgrid(dict, grid)
+    support(dict)≈coverdomain(grid) && compatible_translationgrid(dict, grid)
 hasmeasure(dict::Translates) = true
-measure(dict::Translates) = GenericLebesgueMeasure(support(dict))
+measure(dict::Translates) = DomainLebesgueMeasure(support(dict))
 
 
 export eval_kernel
