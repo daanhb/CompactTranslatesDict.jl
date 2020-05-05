@@ -2,8 +2,8 @@ module PeriodicEquispacedTranslatesDicts
 
 using BasisFunctions, DomainSets, GridArrays, ..TranslatesDictionaries, FillArrays, ..PeriodicIntervals
 
-using BasisFunctions: VerticalBandedMatrix, op_eltype, default_mixedgram_discretemeasure,
-    GenericLebesgueMeasure, DiscreteMeasure
+using BasisFunctions: VerticalBandedMatrix, default_mixedgram_discretemeasure,
+    DomainLebesgueMeasure, DiscreteMeasure
 using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel
 using DomainSets: width
 using GridArrays: similargrid
@@ -120,7 +120,7 @@ function isgramcompatible(b::PeriodicEquispacedTranslates, grid::AbstractEquispa
     l1 > l2 && ((l2,l1) = (l1, l2))
     n = l2/l1
     nInt = round(Int, n)
-    support(b)≈support(grid) && (n≈nInt)
+    support(b)≈coverdomain(grid) && (n≈nInt)
 end
 
 function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::DiscreteMeasure, grid::AbstractEquispacedGrid, weights::FillArrays.AbstractFill;
@@ -133,7 +133,7 @@ function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::DiscreteMe
 end
 
 
-function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::Union{GenericLebesgueMeasure,LegendreMeasure,FourierMeasure};
+function gram(::Type{T}, dict::PeriodicEquispacedTranslates, measure::Union{DomainLebesgueMeasure,LegendreMeasure,FourierMeasure};
         options...) where {T}
     @assert support(dict) ≈ support(measure)
     CirculantOperator{T}(firstgramcolumn(T, dict, measure; options...), dict, dict)
