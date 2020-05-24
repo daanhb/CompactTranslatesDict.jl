@@ -42,7 +42,7 @@ The period of the periodic dictionary
 """
 period(dict::PeriodicEquispacedTranslates) = width(support(dict))
 support(dict::PeriodicEquispacedTranslates, idx) =
-	PeriodicInterval(translationgrid(dict)[idx]+kernel_support(dict), support(dict))
+	PeriodicInterval(translationgrid(dict)[idx] .+ kernel_support(dict), support(dict))
 
 name(::PeriodicEquispacedTranslates) = "Periodic equispaced translates of a periodic kernel function"
 
