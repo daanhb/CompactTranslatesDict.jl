@@ -4,7 +4,8 @@ using BasisFunctions, DomainSets, GridArrays, Reexport
 
 using BasisFunctions: DomainLebesgueMeasure
 
-import BasisFunctions: support, size, length, ordering, unsafe_eval_element, hasinterpolationgrid,
+import BasisFunctions: support, size, length, ordering, unsafe_eval_element, unsafe_eval_element_derivative,
+    hasinterpolationgrid,
     interpolation_grid, hasmeasure, measure, name,
     isperiodic, period, similar, rescale, dict_in_support
 import Base: step
@@ -35,6 +36,9 @@ length(dict::Translates) = length(translationgrid(dict))
 ordering(dict::Translates) = eachindex(translationgrid(dict))
 unsafe_eval_element(dict::Translates, idxn, x) =
     unsafe_eval_kernel(dict, x-translationgrid(dict)[idxn])
+unsafe_eval_element_derivative(dict::Translates, idxn, x, order) =
+    unsafe_eval_kernel_derivative(dict, x-translationgrid(dict)[idxn], order)
+
 dict_in_support(dict::Translates, idxn, x) =
     (x-translationgrid(dict)[idxn]) ∈ kernel_support(dict)
 
@@ -69,6 +73,14 @@ end
 
 unsafe_eval_kernel(dict::Translates, x) =
     dict.kernel(x)
+
+function unsafe_eval_kernel_derivative(dict::Translates, x, order)
+    if order!=0
+        error("Derivative not implemented")
+    end
+    unsafe_eval_kernel(dict, x)
+end
+
 
 name(::Translates) = "Translates of a kernel function"
 
