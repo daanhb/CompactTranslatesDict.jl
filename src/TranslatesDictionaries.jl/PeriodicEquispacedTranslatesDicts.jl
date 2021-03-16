@@ -4,12 +4,13 @@ using BasisFunctions, DomainSets, GridArrays, ..TranslatesDictionaries, FillArra
 
 using BasisFunctions: VerticalBandedMatrix, default_mixedgram_discretemeasure,
     DomainLebesgueMeasure, DiscreteMeasure
-using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel
+using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel, unsafe_eval_kernel_derivative
 using DomainSets: width
 using GridArrays: similargrid
 
 import BasisFunctions: isperiodic, period, support, name, hasgrid_transform, transform_from_grid,
-    transform_to_grid, evaluation, gram, unsafe_eval_element, similar, rescale, dict_in_support
+    transform_to_grid, evaluation, gram, unsafe_eval_element, unsafe_eval_element_derivative,
+    similar, rescale, dict_in_support
 import LinearAlgebra: norm
 import ..TranslatesDictionaries: compatible_translationgrid
 
@@ -147,42 +148,45 @@ function firstgramcolumn(T, dict::Dictionary, measure::Measure; options...)
     firstcolumn
 end
 
-# The evaluation of the basis functions explicitly periodizes the kernel function
-# by summing over its translates.
-function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:sum}, idx, x) where {T,S}
-    c = translationgrid(dict)[idx]
-    per = period(dict)
-    A,B = extrema(kernel_support(dict))
+for (f,g) in ((:unsafe_eval_element,:unsafe_eval_kernel),
+                (:unsafe_eval_element_derivative,:unsafe_eval_kernel_derivative))
+    # The evaluation of the basis functions explicitly periodizes the kernel function
+    # by summing over its translates.
+    @eval function $f(dict::PeriodicEquispacedTranslates{T,S,:sum}, idx, x, args...) where {T,S}
+        c = translationgrid(dict)[idx]
+        per = period(dict)
+        A,B = extrema(kernel_support(dict))
 
-    z = unsafe_eval_kernel(dict, x - c)
-	# Now evaluate the periodic extension. We add and subtract the period
-	# repeatedly until we are beyond the support of the kernel.
-    x1 = x + per
-    while (x1 <= c + B)
-        z += unsafe_eval_kernel(dict, x1-c)
-        x1 += per
+        z = $g(dict, x - c, args...)
+    	# Now evaluate the periodic extension. We add and subtract the period
+    	# repeatedly until we are beyond the support of the kernel.
+        x1 = x + per
+        while (x1 <= c + B)
+            z += $g(dict, x1-c, args...)
+            x1 += per
+        end
+        x2 = x - per
+        while (x2 >= c + A)
+            z += $g(dict, x2-c, args...)
+    		x2 -= per
+        end
+        z
     end
-    x2 = x - per
-    while (x2 >= c + A)
-        z += unsafe_eval_kernel(dict, x2-c)
-		x2 -= per
+
+    @eval $f(dict::PeriodicEquispacedTranslates{T,S,PERIODIZATION}, args...) where {T,S,PERIODIZATION} =
+        error("Periodization $PERIODIZATION not known.")
+
+    function norm(dict::PeriodicEquispacedTranslates{T,S,:norm}, x, y) where {T,S}
+        per = period(dict)
+        ELT = typeof(per)
+        # r = max(abs.(extrema(kernel_support(dict)))...)
+        # t = r^2/(1-cos(2ELT(pi)/per*r))
+        sqrt((1-cos(2ELT(pi)/per*(x - y))))
     end
-    z
-end
-
-unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,PERIODIZATION}) where {T,S,PERIODIZATION} =
-    error("Periodization $PERIODIZATION not known.")
-
-function norm(dict::PeriodicEquispacedTranslates{T,S,:norm}, x, y) where {T,S}
-    per = period(dict)
-    ELT = typeof(per)
-    # r = max(abs.(extrema(kernel_support(dict)))...)
-    # t = r^2/(1-cos(2ELT(pi)/per*r))
-    sqrt((1-cos(2ELT(pi)/per*(x - y))))
-end
-function unsafe_eval_element(dict::PeriodicEquispacedTranslates{T,S,:norm}, idx, x) where {T,S}
-    c = translationgrid(dict)[idx]
-    z = unsafe_eval_kernel(dict, norm(dict, x, c))
+    @eval function $f(dict::PeriodicEquispacedTranslates{T,S,:norm}, idx, x, args...) where {T,S}
+        c = translationgrid(dict)[idx]
+        z = $g(dict, norm(dict, x, c), args...)
+    end
 end
 
 
