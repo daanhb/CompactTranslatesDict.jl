@@ -42,8 +42,8 @@ end
     B = BSplineTranslatesBasis(10,3)
     g0 = BasisFunctions.default_gram(B;overquad=100)
     g1 = gram(B;overquad=100)
-    g2 = gram(B, FourierMeasure();overquad=100)
-    g3 = BasisFunctions.default_gram(B, FourierMeasure();overquad=100)
+    g2 = gram(B, FourierWeight();overquad=100)
+    g3 = BasisFunctions.default_gram(B, FourierWeight();overquad=100)
     @test g1≈g0≈g2≈g3
     @test g1 isa CirculantOperator
     @test g2 isa CirculantOperator

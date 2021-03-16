@@ -84,7 +84,7 @@ end
 
 function test_bspline_orthogonality_orthonormality()
     B = BSplineTranslatesBasis(4,3)
-    for m in [FourierMeasure(),
+    for m in [FourierWeight(),
                 discretemeasure(PeriodicEquispacedGrid(4,0,1)),
                 discretemeasure(MidpointEquispacedGrid(4,0,1)),
                 discretemeasure(PeriodicEquispacedGrid(8,0,1)),

@@ -21,7 +21,7 @@ strings(d::AbstractDiffPeriodicBSplineBasis) = (string(d),
 support(dict::AbstractDiffPeriodicBSplineBasis) =
     UnitInterval{domaintype(dict)}()
 measure(dict::AbstractDiffPeriodicBSplineBasis{T}) where T =
-    FourierMeasure{T}()
+    FourierWeight{T}()
 translationgrid(dict::AbstractDiffPeriodicBSplineBasis{T}) where T =
     PeriodicEquispacedGrid(length(dict), zero(T),one(T))
 hasgrid_transform(dict::AbstractDiffPeriodicBSplineBasis, _, grid::AbstractEquispacedGrid) =
@@ -146,10 +146,10 @@ unscaled_unsafe_eval_kernel(dict::BSplineTranslatesBasis{T,K,S,true}, x) where {
 unscaled_unsafe_eval_kernel(dict::BSplineTranslatesBasis{T,K,S,false}, x) where {K,T,S} =
     (n = length(dict); evaluate_BSpline(Val{K}(), n*x+_shift(K,T), T))
 
-innerproduct_native(d1::BSplineTranslatesBasis, i, d2::BSplineTranslatesBasis, j, measure::FourierMeasure; warnslow=false, options...)  =
+innerproduct_native(d1::BSplineTranslatesBasis, i, d2::BSplineTranslatesBasis, j, measure::FourierWeight; warnslow=false, options...)  =
      BasisFunctions.default_dict_innerproduct(d1, i, d2, j, measure; warnslow=warnslow, options...)
 
-function firstgramcolumn(dict::BSplineTranslatesBasis, measure::FourierMeasure; T=coefficienttype(s, domaintype(measure)), options...)
+function firstgramcolumn(dict::BSplineTranslatesBasis, measure::FourierWeight; T=coefficienttype(s, domaintype(measure)), options...)
     firstcolumn = zeros(T, length(dict))
     for i in 1:length(dict)
         firstcolumn[i] = firstgramcolumnelement(dict, measure, i; T=T, options...)
@@ -158,7 +158,7 @@ function firstgramcolumn(dict::BSplineTranslatesBasis, measure::FourierMeasure; 
 end
 
 
-@inline function firstgramcolumnelement(dict::BSplineTranslatesBasis{S,K,SCALED}, measure::FourierMeasure, i::Int; T=coefficienttype(s), options...) where {S,K,SCALED}
+@inline function firstgramcolumnelement(dict::BSplineTranslatesBasis{S,K,SCALED}, measure::FourierWeight, i::Int; T=coefficienttype(s), options...) where {S,K,SCALED}
     if length(dict) <= 2K+1
         return convert(T, innerproduct(dict, ordering(dict)[i], dict, ordering(dict)[1], measure; options...))
     end
