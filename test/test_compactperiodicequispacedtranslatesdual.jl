@@ -16,7 +16,7 @@ m2 = evaluation(D,similargrid(interpolation_grid(B), Float64,m*N))
 @test mixedgram(B,D,μ)≈IdentityOperator(B, B)
 
 using InfiniteVectors
-b = CompactPeriodicEquispacedTranslatesDuals.signal(B,2)
+b = CompactTranslatesDict.signal(B,2)
 primal_signal = PeriodicInfiniteVector(b, 20)[0:19]
 c = inv(b, 2,K=D.minimalK)'
 dual_signal = PeriodicInfiniteVector(c, 20)[0:19]

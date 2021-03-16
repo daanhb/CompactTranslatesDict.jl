@@ -1,7 +1,10 @@
 using BasisFunctions, DomainSets, CompactTranslatesDict, Test, LinearAlgebra
+
 using BasisFunctions.Test: test_orthogonality_orthonormality
 using BasisFunctions: evaluation, dense_evaluation
-using CompactTranslatesDict.TranslatesDictionaries: compatible_interpolationgrid
+
+using CompactTranslatesDict: compatible_interpolationgrid
+
 function test_generic_periodicbsplinebasis(B,T)
     tol = sqrt(eps(real(T)))
     n = 5
