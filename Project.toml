@@ -1,6 +1,6 @@
 name = "CompactTranslatesDict"
 uuid = "455b6770-8cd4-11e8-0457-dd6f5558b097"
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 BasisFunctions = "4343a256-5453-507d-8aad-01a9d7189916"
