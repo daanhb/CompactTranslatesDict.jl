@@ -1,6 +1,3 @@
-module DiffPeriodicBSplineBases
-
-using ..TranslatesDictionaries, BasisFunctions, DomainSets, GridArrays, ..PeriodicEquispacedTranslatesDicts
 
 using CardinalBSplines: evaluate_centered_BSpline, evaluate_centered_BSpline_derivative,
     evaluate_centered_gauss_BSpline, shifted_spline_integral, evaluate_BSpline, evaluate_BSpline_derivative
@@ -8,8 +5,6 @@ using BasisFunctions: difforder, VerticalBandedMatrix
 
 import BasisFunctions: strings, support, measure, size, hasgrid_transform, length, similar,
     resize, innerproduct_native, name, diff, derivative_dict, differentiation, hasderivative
-import ..TranslatesDictionaries: translationgrid, unsafe_eval_kernel, kernel_support, eval_kernel, unsafe_eval_kernel_derivative
-import ..PeriodicEquispacedTranslatesDicts: firstgramcolumn
 import Base: ==
 
 
@@ -224,6 +219,3 @@ end
 
 approximate_kernel_support(dict::Translates, threshold = eps(T)) where {T} =
     kernel_support(dict)
-
-
-end

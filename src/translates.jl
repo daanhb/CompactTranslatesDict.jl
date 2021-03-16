@@ -1,6 +1,3 @@
-module TranslatesDictionaries
-
-using BasisFunctions, DomainSets, GridArrays, Reexport
 
 using BasisFunctions: DomainLebesgueMeasure
 
@@ -148,6 +145,4 @@ struct GenericEquispacedTranslates{T,S,GRID<:AbstractGrid,DOMAIN<:Domain,KERN} <
         @assert compatible_translationgrid(GenericEquispacedTranslates, grid)
         new{T,S,typeof(grid),typeof(kernel_support),typeof(kernel)}(grid, kernel, kernel_support)
     end
-end
-
 end

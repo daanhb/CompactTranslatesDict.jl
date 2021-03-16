@@ -1,14 +1,9 @@
-module CompactPeriodicEquispacedTranslatesDuals
-
-using BasisFunctions, DomainSets, ..TranslatesDictionaries, ..PeriodicEquispacedTranslatesDicts
 
 using BasisFunctions: VerticalBandedMatrix
 using InfiniteVectors: downsample, subvector, PeriodicInfiniteVector, sublength, shift!
-using ..CompactInfiniteVectors: compactinfinitevector
 using GridArrays: PeriodicEquispacedGrid
 
 import BasisFunctions: string, strings, name, unsafe_eval_element, evaluation, size, length, support
-import CompactTranslatesDict: eval_kernel
 import CardinalBSplines: minimalK
 
 export CompactPeriodicEquispacedTranslatesDual
@@ -138,5 +133,3 @@ end
 
 signal(dict::Dictionary, m::Int; options...) =
     shift!(compactinfinitevector(dict, PeriodicEquispacedGrid(m*length(dict),support(dict));options...),-1)
-
-end

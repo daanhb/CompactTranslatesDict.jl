@@ -1,25 +1,17 @@
 module CompactTranslatesDict
 
-using Reexport
-include("PeriodicIntervals.jl")
+using BasisFunctions, DomainSets, FillArrays,
+    GridArrays, InfiniteVectors, Reexport
+
+include("util/PeriodicIntervals.jl")
 @reexport using .PeriodicIntervals
 
-include("InfiniteVectorsCompat.jl")
-using .InfiniteVectorsCompat
+include("util/infinitevectorscompat.jl")
+include("util/compactinfinitevector.jl")
 
-include("TranslatesDictionaries.jl/TranslatesDictionaries.jl")
-@reexport using .TranslatesDictionaries
-
-include("TranslatesDictionaries.jl/PeriodicEquispacedTranslatesDicts.jl")
-@reexport using .PeriodicEquispacedTranslatesDicts
-
-include("TranslatesDictionaries.jl/DiffPeriodicBSplineBases.jl")
-@reexport using .DiffPeriodicBSplineBases
-
-include("CompactInfiniteVectors.jl")
-@reexport using .CompactInfiniteVectors
-
-include("TranslatesDictionaries.jl/CompactPeriodicEquispacedTranslatesDuals.jl")
-@reexport using .CompactPeriodicEquispacedTranslatesDuals
+include("translates.jl")
+include("PeriodicEquispacedTranslatesDicts.jl")
+include("DiffPeriodicBSplineBases.jl")
+include("CompactPeriodicEquispacedTranslatesDuals.jl")
 
 end

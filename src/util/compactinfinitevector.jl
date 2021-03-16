@@ -1,6 +1,4 @@
-module CompactInfiniteVectors
 
-using BasisFunctions, GridArrays, InfiniteVectors
 export compactinfinitevector
 """
     compactinfinitevector(dict::Dictionary, grid::AbstractGrid)
@@ -49,5 +47,4 @@ function compactinfinitevector(dict::Dictionary{T}, grid::AbstractEquispacedGrid
         os -= length(grid)
     end
     CompactInfiniteVector(truncatedarray, os)
-end
 end

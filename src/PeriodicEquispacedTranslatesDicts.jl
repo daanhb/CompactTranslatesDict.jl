@@ -1,10 +1,6 @@
-module PeriodicEquispacedTranslatesDicts
-
-using BasisFunctions, DomainSets, GridArrays, ..TranslatesDictionaries, FillArrays, ..PeriodicIntervals
 
 using BasisFunctions: VerticalBandedMatrix, default_mixedgram_discretemeasure,
     DomainLebesgueMeasure, DiscreteMeasure
-using ..TranslatesDictionaries: unsafe_eval_kernel, eval_kernel, unsafe_eval_kernel_derivative
 using DomainSets: width
 using GridArrays: similargrid
 
@@ -12,7 +8,6 @@ import BasisFunctions: isperiodic, period, support, name, hasgrid_transform, tra
     transform_to_grid, evaluation, gram, unsafe_eval_element, unsafe_eval_element_derivative,
     similar, rescale, dict_in_support
 import LinearAlgebra: norm
-import ..TranslatesDictionaries: compatible_translationgrid
 
 export PeriodicEquispacedTranslates
 """
@@ -225,6 +220,4 @@ function rescale(dict::PeriodicEquispacedTranslates, a::T, b::T) where {T<:Numbe
     GenericPeriodicEquispacedTranslates(mapped_grid(translationgrid(dict),map),
         x->eval_kernel(dict, inverse(map, x)),
         map.(kernel_support(dict)))
-end
-
 end
