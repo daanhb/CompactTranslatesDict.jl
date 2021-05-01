@@ -3,8 +3,9 @@ using DomainSets, BasisFunctions
 
 using DomainSets: width
 
-import DomainSets: indomain, approx_indomain, infimum, supremum, elements, numelements,
-    element
+import DomainSets: indomain, approx_indomain,
+    infimum, supremum,
+    ncomponents, components, component
 import BasisFunctions: iscomposite, period
 
 export PeriodicInterval
@@ -83,9 +84,9 @@ end
 
 iscomposite(domain::PeriodicInterval) = true
 
-numelements(domain::PeriodicInterval) = domain.numelements
+ncomponents(domain::PeriodicInterval) = domain.numelements
 
-function element(domain::PeriodicInterval, idx)
+function component(domain::PeriodicInterval, idx)
     if idx == 1
         domain.interval1
     elseif idx == 2
@@ -95,7 +96,7 @@ function element(domain::PeriodicInterval, idx)
     end
 end
 
-elements(domain::PeriodicInterval) =
+components(domain::PeriodicInterval) =
     domain.numelements == 1 ? [domain.interval1] : [domain.interval1, domain.interval2]
 
 indomain(x, d::PeriodicInterval) =
@@ -117,33 +118,33 @@ end
 
 infimum(d::PeriodicInterval) = infimum(d.interval1)
 
-supremum(d::PeriodicInterval) = numelements(d) == 1 ? supremum(d.interval1) : supremum(d.interval2)
+supremum(d::PeriodicInterval) = ncomponents(d) == 1 ? supremum(d.interval1) : supremum(d.interval2)
 
 
-function Base.intersect(d1::PeriodicInterval, d2::PeriodicInterval)
+function DomainSets.intersectdomain(d1::PeriodicInterval, d2::PeriodicInterval)
     @assert d1.periodicdomain == d2.periodicdomain
-    n1 = numelements(d1)
-    n2 = numelements(d2)
+    n1 = ncomponents(d1)
+    n2 = ncomponents(d2)
     if n1 == n2 == 1
-        intersect(element(d1, 1), element(d2, 1))
+        intersect(component(d1, 1), component(d2, 1))
     elseif n1 == 1
-        intersect(element(d1, 1), element(d2, 1)) ∪ intersect(element(d1, 1), element(d2, 2))
+        intersect(component(d1, 1), component(d2, 1)) ∪ intersect(component(d1, 1), component(d2, 2))
     elseif n2 == 1
-        intersect(element(d1, 1), element(d2, 1)) ∪ intersect(element(d1, 2), element(d2, 1))
+        intersect(component(d1, 1), component(d2, 1)) ∪ intersect(component(d1, 2), component(d2, 1))
     else
         L = width(d1.periodicdomain)
-        domain1 = intersect(element(d1, 1), element(d2, 1)) ∪ intersect(element(d1, 1), element(d2, 2))
-        domain2 = intersect(element(d1, 2), element(d2, 1)) ∪ intersect(element(d1, 2), element(d2, 2))
+        domain1 = intersect(component(d1, 1), component(d2, 1)) ∪ intersect(component(d1, 1), component(d2, 2))
+        domain2 = intersect(component(d1, 2), component(d2, 1)) ∪ intersect(component(d1, 2), component(d2, 2))
         PeriodicInterval(leftendpoint(domain2)..rightendpoint(domain1)+L, d1.periodicdomain)
     end
 end
 
 # Type-unsafe: intersection with an interval
-function Base.intersect(d::PeriodicInterval, a::AbstractInterval)
-    if numelements(d) > 1
-        UnionDomain(intersect(element(d,1), a),intersect(element(d,2), a))
+function DomainSets.intersectdomain(d::PeriodicInterval, a::AbstractInterval)
+    if ncomponents(d) > 1
+        UnionDomain(intersect(component(d,1), a),intersect(component(d,2), a))
     else
-        intersect(element(d,1), a)
+        intersect(component(d,1), a)
     end
 end
 

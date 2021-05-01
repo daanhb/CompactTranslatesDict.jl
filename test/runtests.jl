@@ -3,7 +3,7 @@ types = (Float64,)
 using CompactTranslatesDict, BasisFunctions, Test, DomainSets
 using BasisFunctions: period, isperiodic
 
-@testset begin
+@testset "generic translates" begin
     g1 = GenericTranslates(EquispacedGrid(10,0,1), exp)
     g2 = GenericEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp)
     g3 = GenericPeriodicEquispacedTranslates(PeriodicEquispacedGrid(10,0,1), exp, Interval(0,.5))
@@ -21,12 +21,12 @@ end
 
 include("test_bsplinetranslatedbasis.jl")
 
-@testset begin
+@testset "orthogonality and orthonormality" begin
     test_bspline_orthogonality_orthonormality()
 end
 
 for T in types
-    @testset "$(rpad("Translates of B spline expansions",80))" begin
+    @testset "Translates of B spline expansions" begin
         test_generic_periodicbsplinebasis(BSplineTranslatesBasis, T)
         test_translatedbsplines(T)
     end
